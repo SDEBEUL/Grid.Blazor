@@ -1,8 +1,8 @@
-﻿@using GridMvc
-@using GridMvc.Filtering
-@using GridMvc.Pagination
-@using GridMvc.Resources
-@using GridMvc.Sorting
+﻿@using GridCore
+@using GridCore.Filtering
+@using GridCore.Pagination
+@using GridCore.Resources
+@using GridCore.Sorting
 @using GridShared
 @using GridShared.Columns
 @using GridShared.Filtering
@@ -48,7 +48,7 @@
     var queryBuilder = new CustomQueryStringBuilder(_settings.FilterSettings.Query);
 
     var exceptQueryParameters = new List<string>
-    {
+{
         QueryStringFilterSettings.DefaultTypeQueryParameter,
         QueryStringFilterSettings.DefaultClearInitFilterQueryParameter
     };
@@ -103,7 +103,7 @@
     }
     _cssSortingClass = string.Join(" ", cssSortingClass);
 
-    string _href = Context.Request.Path + GetSortUrl(Model.Name, Model.Direction);
+    string _href = Context.Request.PathBase + Context.Request.Path + GetSortUrl(Model.Name, Model.Direction);
 
     string GetPagerQueryParameterName(IGridPager pager)
     {
@@ -144,7 +144,7 @@
             }
             else
             {
-                if(Model.InitialDirection.HasValue)
+                if (Model.InitialDirection.HasValue)
                 {
                     if (string.IsNullOrEmpty(url))
                     {
