@@ -77,7 +77,7 @@ namespace GridBlazor
         }
     }
 
-    public class ExcelWriter
+    public class ExcelWriter : IExcelWriter
     {
         private string ColumnLetter(int colIndex)
         {
