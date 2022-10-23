@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 
@@ -69,7 +70,8 @@ namespace GridMvc.Demo.Pages
 
                 c.Add(o => o.OrderID)
                     .Titled(SharedResource.Number)
-                    .SetWidth(100);
+                    .SetWidth(100)
+                    .Sum(true);
 
                 /* Adding "OrderDate" column: */
                 c.Add(o => o.OrderDate, "OrderCustomDate")
@@ -109,7 +111,9 @@ namespace GridMvc.Demo.Pages
                     .Titled(SharedResource.Freight)
                     .SetWidth(100)
                     .Format("{0:F}")
-                    .Sum(true).Average(true).Max(true).Min(true);
+                    .Sum(true).Average(true).Max(true).Min(true)
+                    .Calculate("Average 2", x => x.Get("Freight").SumValue.Number / x.Grid.ItemsCount)
+                    .Calculate("Average 3", x => x.Get("Freight").SumValue.Number / x.Get("OrderID").SumValue.Number);
 
                 /* Adding "Vip customer" column: */
                 c.Add(o => o.Customer.IsVip)
@@ -132,7 +136,9 @@ namespace GridMvc.Demo.Pages
                 .SetStriped(true)
                 .ChangePageSize(true)
                 .WithGridItemsCount()
-                .SetTableLayout(TableLayout.Fixed, "1000px", "400px");
+                .SetTableLayout(TableLayout.Fixed, "1000px", "400px")
+                .SetRemoveDiacritics<NorthwindDbContext>("RemoveDiacritics")
+                .SetToListAsyncFunc(async x => await x.ToListAsync());
 
             Grid = server.Grid;
 

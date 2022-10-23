@@ -41,7 +41,8 @@ namespace GridBlazorStandalone.Services
                 .WithMultipleFilters()
                 .WithGridItemsCount()
                 .Groupable(true)
-                .Searchable(true, false, false);
+                .Searchable(true, false, false)
+                .SetRemoveDiacritics<StringUtils>("RemoveDiacritics");
 
             var items = server.ItemsToDisplay;
             return items;
@@ -55,6 +56,16 @@ namespace GridBlazorStandalone.Services
         public IEnumerable<string> GetCustomersNames()
         {
             return Customers.Select(r => r.CompanyName).ToList();
+        }
+
+        public IEnumerable<SelectItem> GetAllCustomers2()
+        {
+            return Customers.Select(r => new SelectItem(r.CompanyName, r.CompanyName)).ToList();
+        }
+
+        public IEnumerable<SelectItem> GetAllContacts()
+        {
+            return Customers.Select(r => new SelectItem(r.ContactName, r.ContactName)).ToList();
         }
 
         public async Task<Customer> Get(params object[] keys)
@@ -226,5 +237,7 @@ namespace GridBlazorStandalone.Services
         ItemsDTO<Customer> GetCustomersGridRows(Action<IGridColumnCollection<Customer>> columns, QueryDictionary<StringValues> query);
         IEnumerable<SelectItem> GetAllCustomers();
         IEnumerable<string> GetCustomersNames();
+        IEnumerable<SelectItem> GetAllCustomers2();
+        IEnumerable<SelectItem> GetAllContacts();
     }
 }

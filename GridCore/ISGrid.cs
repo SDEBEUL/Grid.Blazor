@@ -1,19 +1,34 @@
-﻿using GridCore.Pagination;
+﻿using GridCore.Filtering;
+using GridCore.Pagination;
+using GridCore.Searching;
+using GridCore.Sorting;
+using GridCore.Totals;
 using GridShared;
 using GridShared.Totals;
 using GridShared.Utility;
 using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace GridCore
 {
-    public interface ISGrid<T> : ISGrid
+    public interface ISGrid<T> : ISGrid, IGrid<T>
     {
         new IGridColumnCollection<T> Columns { get; }
 
+        IGridItemsProcessor<T> PagerProcessor { get; }
+        IGridItemsProcessor<T> SearchProcessor { get; }
+        IGridItemsProcessor<T> FilterProcessor { get; }
+        IGridItemsProcessor<T> SortProcessor { get; }
+        IGridItemsProcessor<T> TotalsProcessor { get; }
+
         void SetRowCssClassesContraint(Func<T, string> contraint);
         IEnumerable<T> GetItemsToDisplay();
+        Task<IEnumerable<T>> GetItemsToDisplayAsync(Func<IQueryable<T>, Task<IList<T>>> toListAsync);
+
+        void SetToListAsyncFunc(Func<IQueryable<T>, Task<IList<T>>> toListAsync);
     }
 
     public interface ISGrid : IGrid, IGridOptions
@@ -49,5 +64,17 @@ namespace GridCore
         bool DefaultFilteringEnabled { get; set; }
 
         void AutoGenerateColumns();
+
+        Task<IEnumerable<object>> GetItemsToDisplayAsync();
+
+        /// <summary>
+        ///     Displaying grid items count
+        /// </summary>
+        Task<int> GetDisplayingItemsCountAsync();
+
+        /// <summary>
+        ///     Get column values to display
+        /// </summary>
+        IList<object> GetValuesToDisplay(string columnName, IEnumerable<object> items);
     }
 }

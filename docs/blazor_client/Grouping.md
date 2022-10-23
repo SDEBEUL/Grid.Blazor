@@ -1,4 +1,4 @@
-## Blazor WASM with GridCore back-end
+## Blazor WASM with GridCore back-end (REST API)
 
 # Grouping
 
@@ -26,4 +26,4 @@ This is an example of a table of items using grouping:
 ![](../images/Grouping.png)
 
 
-[<- Sorting](Sorting.md) | [Selecting row ->](Selecting_row.md)
+[<- Sorting](Sorting.md) | [Rearrange columns ->](RearrangeColumns.md)

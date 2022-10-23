@@ -6,15 +6,15 @@
     <LangVersion>8.0</LangVersion>
     <GenerateEmbeddedFilesManifest>True</GenerateEmbeddedFilesManifest>
     <EnableDefaultEmbeddedResourceItems>False</EnableDefaultEmbeddedResourceItems>
-    <Version>3.0.0-preview-1</Version>
+    <Version>3.4.1</Version>
     <Title>GridBlazor</Title>
     <Description>Grid components for Blazor</Description>
     <Summary>Grid components for Blazor</Summary>
     <Authors>Gustau Navarro</Authors>
-    <PackageTags>grid blazor</PackageTags>
+    <PackageTags>grid blazor table crud rest grpc</PackageTags>
     <PackageProjectUrl>https://github.com/gustavnavar/Grid.Blazor</PackageProjectUrl>
     <PackageLicenseExpression>LGPL-2.1-only</PackageLicenseExpression>
-    <PackageReleaseNotes>Supports .NET Core 3.1</PackageReleaseNotes>
+    <PackageReleaseNotes>Supports .NET Standard 2.1, .NET 5.0, .NET 6.0</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,14 +24,15 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-    <PackageReference Include="Microsoft.AspNetCore.Components" Version="6.0.0-rc.2.21480.10" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.0-rc.2.21480.10" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0-rc.2.21480.5" />
-    <PackageReference Include="Microsoft.Extensions.Primitives" Version="6.0.0-rc.2.21480.5" />
-    <PackageReference Include="System.Net.Http.Json" Version="6.0.0-rc.2.21480.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="6.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0" />
+    <PackageReference Include="Microsoft.Extensions.Primitives" Version="6.0" />
+    <PackageReference Include="System.Net.Http.Json" Version="6.0" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
+	<PackageReference Include="Agno.BlazorInputFile" Version="0.4.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="5.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0" />
@@ -40,6 +41,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+	<PackageReference Include="Agno.BlazorInputFile" Version="0.4.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="3.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="3.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1" />
@@ -48,7 +50,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Agno.BlazorInputFile" Version="0.3.0" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.11" />
   </ItemGroup>
   
@@ -126,6 +127,12 @@
     <EmbeddedResource Include="Resources\Strings.uk.resx" LogicalName="GridBlazor.Resources.Strings.uk.resources">
       <Generator></Generator>
     </EmbeddedResource>
+	<EmbeddedResource Include="Resources\Strings.ar.resx" LogicalName="GridBlazor.Resources.Strings.ar.resources">
+	  <Generator></Generator>
+	</EmbeddedResource>
+	<EmbeddedResource Include="Resources\Strings.da-DK.resx" LogicalName="GridBlazor.Resources.Strings.da-DK.resources">
+      <Generator></Generator>
+	</EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

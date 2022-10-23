@@ -43,8 +43,7 @@ namespace GridMvc.Demo
 
             services.AddMvc()
                 .AddViewLocalization()
-                .AddDataAnnotationsLocalization()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+                .AddDataAnnotationsLocalization();
 
             services.AddScoped<LanguageFilter>();
             services.AddScoped<IOrderService, OrderService>();
@@ -78,7 +77,9 @@ namespace GridMvc.Demo
                             new CultureInfo("eu-ES"),
                             new CultureInfo("pt-BR"),
                             new CultureInfo("bg-BG"),
-                            new CultureInfo("uk-UA")
+                            new CultureInfo("uk-UA"),
+                            new CultureInfo("ar-EG"),
+                            new CultureInfo("da-DK")
                         };
 
                     options.DefaultRequestCulture = new RequestCulture(culture: "en-US", uiCulture: "en-US");

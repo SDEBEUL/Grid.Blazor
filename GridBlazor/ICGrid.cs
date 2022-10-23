@@ -13,6 +13,14 @@ using System.Threading.Tasks;
 
 namespace GridBlazor
 {
+    public interface ICGrid<T> : ICGrid, IGrid<T>
+    {
+        /// <summary>
+        ///     Function to init values for columns in the Create form
+        /// </summary>
+        Func<T, Task> InitCreateValues { get; set; }
+    }
+
     /// <summary>
     ///     Grid.Mvc interface
     /// </summary>
@@ -43,6 +51,11 @@ namespace GridBlazor
         /// </summary>
         bool SubGridsOpened { get; }
 
+        /// <summary>
+        ///     Set or get default value of rearrange column
+        /// </summary>
+        public bool RearrangeColumnEnabled { get; set; }
+
         Type Type { get; }
 
         string Url { get; }
@@ -63,6 +76,8 @@ namespace GridBlazor
         ///     Get primary keys for CRUD
         /// </summary>
         string[] GetPrimaryKeys();
+
+        bool DataAnnotationsValidation { get; set; }
 
         IGridSettingsProvider Settings { get; }
 
@@ -90,6 +105,14 @@ namespace GridBlazor
         void RemoveAllFilters();
 
         Task DownloadExcel(IJSRuntime js, string filename);
+
+        /// <summary>
+        /// Changes postion of instertingColumn to appear before targetColumn
+        /// </summary>
+        /// <param name="targetColumn">Column which will be moved</param>
+        /// <param name="insertingColumn">Column before which it will be inserted</param>
+        /// <returns>Retruns true if column was sucessfully inserted before target otherwise false</returns>
+        Task<bool> InsertColumn(IGridColumn targetColumn, IGridColumn insertingColumn);
 
         /// <summary>
         ///     Get and set export to an Excel file
@@ -229,6 +252,36 @@ namespace GridBlazor
         bool ODataOverrideExpandList { get; set; }
 
         /// <summary>
+        ///     Get OData pre-processor parameters (expand and filter)
+        /// </summary>
+        string GetODataPreProcessorParameters();
+
+        /// <summary>
+        ///     Get OData processor parameters (sorting and paging)
+        /// </summary>
+        string GetODataProcessorParameters();
+
+        /// <summary>
+        ///     Get OData expand parameter
+        /// </summary>
+        string GetODataExpandParameters();
+
+        /// <summary>
+        ///     Get OData filter parameter
+        /// </summary>
+        string GetODataFilterParameters();
+
+        /// <summary>
+        ///     Get OData pager parameter
+        /// </summary>
+        string GetODataPagerParameters();
+
+        /// <summary>
+        ///     Get OData sort parameter
+        /// </summary>
+        string GetODataSortParameters();
+
+        /// <summary>
         ///     Create button label
         /// </summary>
         string CreateLabel { get; set; }
@@ -247,6 +300,26 @@ namespace GridBlazor
         ///     Delete button label
         /// </summary>
         string DeleteLabel { get; set; }
+
+        /// <summary>
+        ///     Create button tooltip
+        /// </summary>
+        string CreateTooltip { get; set; }
+
+        /// <summary>
+        ///     Read button tooltip
+        /// </summary>
+        string ReadTooltip { get; set; }
+
+        /// <summary>
+        ///     Update button tooltip
+        /// </summary>
+        string UpdateTooltip { get; set; }
+
+        /// <summary>
+        ///     Delete button tooltip
+        /// </summary>
+        string DeleteTooltip { get; set; }
 
         /// <summary>
         ///     Create form label
@@ -294,18 +367,19 @@ namespace GridBlazor
         int DeleteConfirmationWidth { get; set; }
 
         int DeleteConfirmationLabelWidth { get; set; }
+
         /// <summary>
         ///     Header CRUD buttons
         /// </summary>
         bool HeaderCrudButtons { get; set; }
 
         /// <summary>
-        ///     Header CRUD buttons
+        ///     Show errors on Grid when getting data
         /// </summary>
         bool ShowErrorsOnGrid { get; set; }
 
         /// <summary>
-        ///     Header CRUD buttons
+        ///     Throw exceptions when getting data
         /// </summary>
         bool ThrowExceptions { get; set; }
 
@@ -318,5 +392,11 @@ namespace GridBlazor
         ///     Go to Edit form after insert row
         /// </summary>
         bool EditAfterInsert { get; set; }
+
+        /// <summary>
+        ///     Get column values to display
+        /// </summary>
+        [Obsolete("This method is obsolete. Use the new async GetGroupValues() method.", false)]
+        IList<object> GetValuesToDisplay(string columnName, IEnumerable<object> items);
     }
 }

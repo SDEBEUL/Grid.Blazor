@@ -9,6 +9,7 @@ using GridCore.Totals;
 using GridShared;
 using GridShared.Columns;
 using GridShared.DataAnnotations;
+using GridShared.Grouping;
 using GridShared.Totals;
 using GridShared.Utility;
 using Microsoft.AspNetCore.Http;
@@ -18,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace GridCore
 {
@@ -49,6 +51,12 @@ namespace GridCore
         {
         }
 
+        public SGridCore(IEnumerable<T> items, QueryDictionary<string> query, bool renderOnlyRows,
+            string pagerViewName = GridPager.DefaultPagerViewName, IColumnBuilder<T> columnBuilder = null)
+            : this(items, query.ToStringValuesDictionary(), renderOnlyRows, pagerViewName, columnBuilder)
+        {
+        }
+
         public SGridCore(IEnumerable<T> items, QueryDictionary<StringValues> query, bool renderOnlyRows,
             string pagerViewName = GridPager.DefaultPagerViewName, IColumnBuilder<T> columnBuilder = null)
             : this(items, query, columnBuilder)
@@ -68,6 +76,11 @@ namespace GridCore
         public SGridCore(IEnumerable<T> items, IQueryCollection query, IColumnBuilder<T> columnBuilder = null)
             : this(items, QueryDictionary<StringValues>.Convert(query), columnBuilder)
         { }
+
+        public SGridCore(IEnumerable<T> items, QueryDictionary<string> query, IColumnBuilder<T> columnBuilder = null)
+            : this(items, query.ToStringValuesDictionary(), columnBuilder)
+        {
+        }
 
         public SGridCore(IEnumerable<T> items, QueryDictionary<StringValues> query, IColumnBuilder<T> columnBuilder = null)
             : this()
@@ -117,13 +130,11 @@ namespace GridCore
             get { return _columnsCollection; }
         }
 
-        public bool SearchingEnabled { get; set; }
-
-        public bool SearchingOnlyTextColumns { get; set; }
-
-        public bool SearchingHiddenColumns { get; set; }
+        public SearchOptions SearchOptions { get; set; } = new SearchOptions() { Enabled = false };
 
         public bool ExtSortingEnabled { get; set; }
+
+        public bool HiddenExtSortingHeader { get; set; } = false;
 
         public bool GroupingEnabled { get; set; }
 
@@ -164,12 +175,55 @@ namespace GridCore
             }
         }
 
+        public IGridItemsProcessor<T> PagerProcessor { get { return _pagerProcessor; } }
+
+        public IGridItemsProcessor<T> SearchProcessor { get { return _currentSearchItemsProcessor; } }
+        
+        public IGridItemsProcessor<T> FilterProcessor { get { return _currentFilterItemsProcessor; } }
+        
+        public IGridItemsProcessor<T> SortProcessor { get { return _currentSortItemsProcessor; } }
+        
+        public IGridItemsProcessor<T> TotalsProcessor { get { return _currentTotalsItemsProcessor; } }
+
+        public MethodInfo RemoveDiacritics { get; set; } = null;
+
         /// <summary>
         ///     Items, displaying in the grid view
         /// </summary>
         public IEnumerable<object> ItemsToDisplay
         {
             get { return (IEnumerable<object>)GetItemsToDisplay(); }
+        }
+        public virtual IEnumerable<T> GetItemsToDisplay()
+        {
+            PrepareItemsToDisplay();
+            return AfterItems;
+        }
+
+        /// <summary>
+        ///     Methods returns items that will need to be displayed
+        /// </summary>
+        public virtual void SetToListAsyncFunc(Func<IQueryable<T>, Task<IList<T>>> toListAsync)
+        {
+            ToListAsync = toListAsync;
+        }
+
+        /// <summary>
+        ///     Methods returns items that will need to be displayed
+        /// </summary>
+        public virtual async Task<IEnumerable<T>> GetItemsToDisplayAsync(Func<IQueryable<T>, Task<IList<T>>> toListAsync)
+        {
+            SetToListAsyncFunc(toListAsync);
+            return (IEnumerable<T>)await GetItemsToDisplayAsync();
+        }
+
+        /// <summary>
+        ///     Methods returns items that will need to be displayed
+        /// </summary>
+        public virtual async Task<IEnumerable<object>> GetItemsToDisplayAsync()
+        {
+            await PrepareItemsToDisplayAsync(ToListAsync);
+            return (IEnumerable<object>)AfterItems;
         }
 
         /// <summary>
@@ -191,6 +245,17 @@ namespace GridCore
                 _displayingItemsCount = GetItemsToDisplay().Count();
                 return _displayingItemsCount;
             }
+        }
+
+        /// <summary>
+        ///     Count of current displaying items
+        /// </summary>
+        public virtual async Task<int> GetDisplayingItemsCountAsync()
+        {
+            if (_displayingItemsCount >= 0)
+                return _displayingItemsCount;
+            _displayingItemsCount = (await GetItemsToDisplayAsync()).Count();
+            return _displayingItemsCount;
         }
 
         /// <summary>
@@ -302,6 +367,11 @@ namespace GridCore
         public bool IsMinEnabled { get { return Columns.Any(r => ((ITotalsColumn)r).IsMinEnabled); } }
 
         /// <summary>
+        ///     Calculation enabled for some columns
+        /// </summary>
+        public bool IsCalculationEnabled { get { return Columns.Any(r => ((ITotalsColumn)r).IsCalculationEnabled); } }
+
+        /// <summary>
         ///     Grid direction
         /// </summary>
         public GridDirection Direction { get; set; } = GridDirection.LTR;
@@ -338,15 +408,6 @@ namespace GridCore
             {
                 (Pager as GridPager).MaxDisplayedPages = opt.PagingMaxDisplayedPages;
             }
-        }
-
-        /// <summary>
-        ///     Methods returns items that will need to be displayed
-        /// </summary>
-        public virtual IEnumerable<T> GetItemsToDisplay()
-        {
-            PrepareItemsToDisplay();
-            return AfterItems;
         }
 
         /// <summary>
@@ -415,28 +476,35 @@ namespace GridCore
                 foreach (ITotalsColumn column in Columns)
                 {
                     if (column.IsSumEnabled)
-                        totals.Sum.Add(((IGridColumn)column).Name, column.SumString);
+                        totals.Sum.Add(((IGridColumn)column).Name, column.SumValue);
                 }
 
             if (IsAverageEnabled)
                 foreach (ITotalsColumn column in Columns)
                 {
                     if (column.IsAverageEnabled)
-                        totals.Average.Add(((IGridColumn)column).Name, column.AverageString);
+                        totals.Average.Add(((IGridColumn)column).Name, column.AverageValue);
                 }
 
             if (IsMaxEnabled)
                 foreach (ITotalsColumn column in Columns)
                 {
                     if (column.IsMaxEnabled)
-                        totals.Max.Add(((IGridColumn)column).Name, column.MaxString);
+                        totals.Max.Add(((IGridColumn)column).Name, column.MaxValue);
                 }
 
             if (IsMinEnabled)
                 foreach (ITotalsColumn column in Columns)
                 {
                     if (column.IsMinEnabled)
-                        totals.Min.Add(((IGridColumn)column).Name, column.MinString);
+                        totals.Min.Add(((IGridColumn)column).Name, column.MinValue);
+                }
+
+            if (IsCalculationEnabled)
+                foreach (ITotalsColumn column in Columns)
+                {
+                    if (column.IsCalculationEnabled)
+                        totals.Calculations.Add(((IGridColumn)column).Name, column.CalculationValues);
                 }
 
             return totals;
@@ -456,6 +524,21 @@ namespace GridCore
             if (column == null)
                 return new List<object>();
             return ((IGridColumn<T>)column).Group.GetColumnValues((items as IEnumerable<T>).AsQueryable()).ToList();
+        }
+
+        public IList<object> GetGroupValues(IColumnGroup<T> group, IEnumerable<object> items)
+        {
+            if (group == null)
+                return new List<object>();
+            return group.GetColumnValues((items as IEnumerable<T>).AsQueryable()).ToList();
+        }
+
+        public IColumnGroup<T> GetGroup(string columnName)
+        {
+            var column = Columns.SingleOrDefault(r => r.Name == columnName);
+            if (column == null)
+                return null;
+            return ((IGridColumn<T>)column).Group;
         }
 
         public IEnumerable<object> GetItemsToDisplay(IList<Tuple<string, object>> values, IEnumerable<object> items)

@@ -19,7 +19,7 @@ namespace GridBlazorServerSide.Services
             _options = options;
         }
 
-        public ItemsDTO<OrderDetail> GetOrderDetailsGridRows(Action<IGridColumnCollection<OrderDetail>> columns,
+        public async Task<ItemsDTO<OrderDetail>> GetOrderDetailsGridRowsAsync(Action<IGridColumnCollection<OrderDetail>> columns,
             object[] keys, QueryDictionary<StringValues> query)
         {
             using (var context = new NorthwindDbContext(_options))
@@ -31,10 +31,11 @@ namespace GridBlazorServerSide.Services
                         .Sortable()
                         .WithPaging(10)
                         .Filterable()
-                        .WithMultipleFilters();
+                        .WithMultipleFilters()
+                        .SetRemoveDiacritics<NorthwindDbContext>("RemoveDiacritics");
 
                 // return items to displays
-                var items = server.ItemsToDisplay;
+                var items = await server.GetItemsToDisplayAsync(async x => await x.ToListAsync());
                 return items;
             }
         }
@@ -107,7 +108,7 @@ namespace GridBlazorServerSide.Services
 
     public interface IOrderDetailService : ICrudDataService<OrderDetail>
     {
-        ItemsDTO<OrderDetail> GetOrderDetailsGridRows(Action<IGridColumnCollection<OrderDetail>> columns,
+        Task<ItemsDTO<OrderDetail>> GetOrderDetailsGridRowsAsync(Action<IGridColumnCollection<OrderDetail>> columns,
             object[] keys, QueryDictionary<StringValues> query);
     }
 }

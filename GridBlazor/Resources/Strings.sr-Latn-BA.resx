@@ -279,4 +279,19 @@
   <data name="DeleteConfirmCodeError" xml:space="preserve">
     <value>Šifra i šifra potvrde moraju biti jednake za brisanje ovog artikla</value>
   </data>
+  <data name="Goto" xml:space="preserve">
+    <value>Pođi do</value>
+  </data>
+  <data name="SearchFilterListInputText" xml:space="preserve">
+    <value>Fraza za pretragu</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>Sve</value>
+  </data>
+  <data name="None" xml:space="preserve">
+    <value>Niko</value>
+  </data>
+  <data name="Select" xml:space="preserve">
+    <value>Izaberite</value>
+  </data>
 </root>

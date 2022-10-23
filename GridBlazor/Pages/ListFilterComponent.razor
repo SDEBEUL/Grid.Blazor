@@ -7,23 +7,47 @@
 {
 <div class="dropdown dropdown-menu grid-dropdown opened" style="display:block;position:relative;@("margin-left:" + _offset.ToString() + "px;")" @ref="listFilter" @onkeyup="FilterKeyup" @onclick:stopPropagation @onkeyup:stopPropagation tabindex="-1">
     <div class="grid-dropdown-arrow" style="@("margin-left:" + (-_offset).ToString() + "px;")"></div>
-    <div class="grid-dropdown-inner">
+    <div class="grid-dropdown-inner grid-dropdown-list-filter-class">
         <div class="grid-popup-widget">
             <div class="grid-filter-body">
+                @if (_filterOptions.ShowSelectAllButtons)
+                {
+                    <div class="grid-buttons ml-0 my-2">
+                        <div class="grid-filter-buttons">
+                            <label class="mr-3"><b>@Strings.Select:</b></label>
+                            <button type="button" class="btn btn-secondary mr-2" @onclick="SelectVisibleButtonClicked" @onclick:stopPropagation>
+                                @Strings.All
+                            </button>
+                            <button type="button" class="btn btn-secondary" @onclick="UnselectVisibleButtonClicked" @onclick:stopPropagation>
+                                @Strings.None
+                            </button>
+                        </div>
+                    </div>
+                }
+                @if (_filterOptions.ShowSearchInput)
+                {
+                    <div class="form-group my-2">
+                        <input type="text"
+                               class="grid-filter-input form-control" 
+                               placeholder="@Strings.SearchFilterListInputText"
+                               value="@SearchFilterListText"
+                               @oninput="FilterTextChanged"/>
+                    </div>
+                }
                 <label><b>@Strings.FilterValueLabel:</b></label>
                 <ul class="menu-list">
-                    @foreach (var data in _selectList)
+                    @foreach (var data in _visibleList)
                     {
                         bool isChecked = _filters.Any(x => x.Type.Equals("1") && x.Value.Equals(data.Value));
                         <li>
-                            <label>
+                            <label class="list-filter-label">
                                 @if (isChecked)
                                 {
-                                    <input type="checkbox" class="grid-filter-list" checked value="@isChecked" @onclick="e => MyClickHandler(e, isChecked, data.Value)" />
+                                    <input type="checkbox" class="grid-filter-list" checked value="@isChecked" @onclick="e => MyClickHandler(e, isChecked, data.Value)"/>
                                 }
                                 else
                                 {
-                                    <input type="checkbox" class="grid-filter-list" value="@isChecked" @onclick="e => MyClickHandler(e, isChecked, data.Value)" />
+                                    <input type="checkbox" class="grid-filter-list" value="@isChecked" @onclick="e => MyClickHandler(e, isChecked, data.Value)"/>
                                 }
                                 @data.Title
                             </label>
@@ -33,14 +57,14 @@
                     {
                         bool isChecked = _filters.Any(x => x.Type.Equals("11"));
                         <li>
-                            <label>
+                            <label class="list-filter-label">
                                 @if (isChecked)
                                 {
-                                    <input type="checkbox" class="grid-filter-list" checked value="@isChecked" @onclick="e => IsNullHandler(e, isChecked)" />
+                                    <input type="checkbox" class="grid-filter-list" checked value="@isChecked" @onclick="e => IsNullHandler(e, isChecked)"/>
                                 }
                                 else
                                 {
-                                    <input type="checkbox" class="grid-filter-list" value="@isChecked" @onclick="e => IsNullHandler(e, isChecked)" />
+                                    <input type="checkbox" class="grid-filter-list" value="@isChecked" @onclick="e => IsNullHandler(e, isChecked)"/>
                                 }
                                 @Strings.IsNull
                             </label>
@@ -50,14 +74,14 @@
                     {
                         bool isChecked = _filters.Any(x => x.Type.Equals("12"));
                         <li>
-                            <label>
+                            <label class="list-filter-label">
                                 @if (isChecked)
                                 {
-                                    <input type="checkbox" class="grid-filter-list" checked value="@isChecked" @onclick="e => IsNotNullHandler(e, isChecked)" />
+                                    <input type="checkbox" class="grid-filter-list" checked value="@isChecked" @onclick="e => IsNotNullHandler(e, isChecked)"/>
                                 }
                                 else
                                 {
-                                    <input type="checkbox" class="grid-filter-list" value="@isChecked" @onclick="e => IsNotNullHandler(e, isChecked)" />
+                                    <input type="checkbox" class="grid-filter-list" value="@isChecked" @onclick="e => IsNotNullHandler(e, isChecked)"/>
                                 }
                                 @Strings.IsNotNull
                             </label>

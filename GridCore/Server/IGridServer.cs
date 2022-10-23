@@ -1,6 +1,9 @@
 ﻿using GridShared;
 using GridShared.Utility;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace GridCore.Server
 {
@@ -79,6 +82,11 @@ namespace GridCore.Server
         IGridServer<T> Searchable(bool enable, bool onlyTextColumns, bool hiddenColumns);
 
         /// <summary>
+        ///     Enable or disable searching for all columns
+        /// </summary>
+        IGridServer<T> Searchable(Action<SearchOptions> searchOptions);
+
+        /// <summary>
         ///     Enable extended sorting
         /// </summary>
         IGridServer<T> ExtSortable();
@@ -89,6 +97,11 @@ namespace GridCore.Server
         IGridServer<T> ExtSortable(bool enable);
 
         /// <summary>
+        ///     Hide extended sorting header
+        /// </summary>
+        IGridServer<T> ExtSortable(bool enable, bool hidden);
+
+        /// <summary>
         ///     Enable grouping
         /// </summary>
         IGridServer<T> Groupable();
@@ -97,6 +110,11 @@ namespace GridCore.Server
         ///     Enable or disable grouping
         /// </summary>
         IGridServer<T> Groupable(bool enable);
+
+        /// <summary>
+        ///     Hide grouping header
+        /// </summary>
+        IGridServer<T> Groupable(bool enable, bool hidden);
 
         /// <summary>
         ///     Enable or disable visibility of ClearFiltersButton
@@ -172,9 +190,18 @@ namespace GridCore.Server
         IGridServer<T> SetTableLayout(TableLayout tableLayout, string width = null, string height = null);
 
         /// <summary>
+        ///    Setup the table layout and dimensions
+        /// </summary>
+        IGridServer<T> SetRemoveDiacritics<R>(string methodName);
+
+        IGridServer<T> SetToListAsyncFunc(Func<IQueryable<T>, Task<IList<T>>> toListAsync);
+
+        /// <summary>
         ///     Items, displaying in the grid view
         /// </summary>
         ItemsDTO<T> ItemsToDisplay { get; }
+
+        Task<ItemsDTO<T>> GetItemsToDisplayAsync(Func<IQueryable<T>, Task<IList<T>>> toListAsync);
 
         /// <summary>
         ///     Grid object

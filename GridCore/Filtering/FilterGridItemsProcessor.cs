@@ -13,6 +13,7 @@ namespace GridCore.Filtering
     {
         private readonly ISGrid _grid;
         private IGridFilterSettings _settings;
+        private Func<IQueryable<T>, IQueryable<T>> _process;
 
         public FilterGridItemsProcessor(ISGrid grid, IGridFilterSettings settings)
         {
@@ -33,6 +34,9 @@ namespace GridCore.Filtering
 
         public IQueryable<T> Process(IQueryable<T> items)
         {
+            if (_process != null)
+                return _process(items);
+
             foreach (IGridColumn column in _grid.Columns)
             {
                 var gridColumn = column as IGridColumn<T>;
@@ -46,9 +50,14 @@ namespace GridCore.Filtering
                                                                  }
                                                              : _settings.FilteredColumns.GetByColumn(column);
 
-                items = ((IColumnFilter<T>)gridColumn.Filter).ApplyFilter(items, options);
+                items = ((IColumnFilter<T>)gridColumn.Filter).ApplyFilter(items, options, _grid.RemoveDiacritics);
             }
             return items;
+        }
+
+        public void SetProcess(Func<IQueryable<T>, IQueryable<T>> process)
+        {
+            _process = process;
         }
 
         #endregion

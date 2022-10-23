@@ -24,7 +24,7 @@
             {
                 continue;
             }
-            <div class="form-group row" style="@(column.CrudHidden.HasFlag(CrudHidden.READ)?"display:none;":"")">
+            <div class="form-group row" style="@(((IGridColumn<T>)column).CrudHidden(Item).HasFlag(CrudHidden.READ)?"display:none;":"")">
                 @if (!string.IsNullOrWhiteSpace(column.TooltipValue))
                 {
                     <div class="col-md-@column.CrudLabelWidth.ToString()">
@@ -61,7 +61,7 @@
                             }
                             else
                             {
-                                <input id="@column.FieldName" type="checkbox" class="form-control" disabled="disabled" readonly="readonly" checked="checked" value="true" />
+                                <input id="@column.FieldName" type="checkbox" class="form-check" disabled="disabled" readonly="readonly" checked="checked" value="true" />
                             }
                         }
                         else
@@ -77,7 +77,7 @@
                             }
                             else
                             {
-                                <input id="@column.FieldName" type="checkbox" class="form-control" disabled="disabled" readonly="readonly" value="false" />
+                                <input id="@column.FieldName" type="checkbox" class="form-check" disabled="disabled" readonly="readonly" value="false" />
                             }
                         }
                     }
@@ -85,7 +85,7 @@
                     {
                         if (((IGridColumn<T>)column).InputType == InputType.TextArea)
                         {
-                            <textarea id="@column.FieldName" class="form-control" rows="5" readonly="readonly" value="@column.GetFormatedValue(value)" />
+                            <textarea id="@column.FieldName" class="form-control" rows="@column.TextAreaRows" readonly="readonly" value="@column.GetFormatedValue(value)" />
                         }
                         else
                         {
@@ -121,7 +121,7 @@
         else if ((((ICGridColumn)column).SubGrids != null || column.ReadComponentType != null)
             && string.IsNullOrWhiteSpace(column.TabGroup))
         {
-            <div class="form-group row" style="@(column.CrudHidden.HasFlag(CrudHidden.READ)?"display:none;":"")">
+            <div class="form-group row" style="@(((IGridColumn<T>)column).CrudHidden(Item).HasFlag(CrudHidden.READ)?"display:none;":"")">
                 @if (!string.IsNullOrWhiteSpace(column.TooltipValue))
                 {
                     <div class="col-md-@column.CrudLabelWidth.ToString()">
@@ -132,18 +132,20 @@
                 {
                     <label class="col-form-label col-md-@column.CrudLabelWidth.ToString()">@column.Title</label>
                 }
-                <div class="col-md-@((12 - column.CrudLabelWidth).ToString())">
-                    @if (column.EnableCard)
-                    {
+                @if (column.EnableCard)
+                {
+                    <div class="col-md-@((12 - column.CrudLabelWidth).ToString())">
                         <div class="card panel panel-default">
                             <div class="card-body panel-body">@_renderFragments.Get(column.Name)</div>
                         </div>
-                    }
-                    else
-                    {
+                     </div>
+                 }
+                 else
+                 {
+                    <div class="col-md-@(column.CrudWidth.ToString())">
                         @_renderFragments.Get(column.Name)
-                    }
-                </div>
+                     </div>
+                 }
             </div>
         }
     }

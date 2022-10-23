@@ -31,7 +31,7 @@ namespace GridBlazor
             //WithPaging(_source.Pager.PageSize);
         }
 
-        [Obsolete("This constructor is obsolete. Use one including an HttpClient parameter.", false)]
+        [Obsolete("This constructor is obsolete. Use one including an HttpClient parameter.", true)]
         public GridClient(string url, IQueryDictionary<StringValues> query, bool renderOnlyRows, 
             string gridName, Action<IGridColumnCollection<T>> columns = null, CultureInfo cultureInfo = null,
             IColumnBuilder<T> columnBuilder = null)
@@ -57,6 +57,56 @@ namespace GridBlazor
             IColumnBuilder<T> columnBuilder = null)
         {
             _source = new CGrid<T>(dataServiceAsync, query, renderOnlyRows, columns, cultureInfo, columnBuilder);
+            Named(gridName);
+            //WithPaging(_source.Pager.PageSize);
+        }
+
+        public GridClient(Func<QueryDictionary<string>, Task<ItemsDTO<T>>> grpcService,
+            QueryDictionary<string> query, bool renderOnlyRows, string gridName,
+            Action<IGridColumnCollection<T>> columns = null, CultureInfo cultureInfo = null,
+            IColumnBuilder<T> columnBuilder = null)
+        {
+            _source = new CGrid<T>(grpcService, query, renderOnlyRows, columns, cultureInfo, columnBuilder);
+            Named(gridName);
+            //WithPaging(_source.Pager.PageSize);
+        }
+
+        public GridClient(HttpClient httpClient, string url, IMemoryDataService<T> memoryDataService, 
+            IQueryDictionary<StringValues> query, bool renderOnlyRows,
+            string gridName, Action<IGridColumnCollection<T>> columns = null, CultureInfo cultureInfo = null,
+            IColumnBuilder<T> columnBuilder = null)
+        {
+            _source = new CGrid<T>(httpClient, url, memoryDataService, query, renderOnlyRows, columns, cultureInfo, columnBuilder);
+            Named(gridName);
+            //WithPaging(_source.Pager.PageSize);
+        }
+
+        public GridClient(Func<QueryDictionary<StringValues>, ItemsDTO<T>> dataService, IMemoryDataService<T> memoryDataService,
+            QueryDictionary<StringValues> query, bool renderOnlyRows, string gridName,
+            Action<IGridColumnCollection<T>> columns = null, CultureInfo cultureInfo = null,
+            IColumnBuilder<T> columnBuilder = null)
+        {
+            _source = new CGrid<T>(dataService, memoryDataService, query, renderOnlyRows, columns, cultureInfo, columnBuilder);
+            Named(gridName);
+            //WithPaging(_source.Pager.PageSize);
+        }
+
+        public GridClient(Func<QueryDictionary<StringValues>, Task<ItemsDTO<T>>> dataServiceAsync, 
+            IMemoryDataService<T> memoryDataService, QueryDictionary<StringValues> query, bool renderOnlyRows, string gridName,
+            Action<IGridColumnCollection<T>> columns = null, CultureInfo cultureInfo = null,
+            IColumnBuilder<T> columnBuilder = null)
+        {
+            _source = new CGrid<T>(dataServiceAsync, memoryDataService, query, renderOnlyRows, columns, cultureInfo, columnBuilder);
+            Named(gridName);
+            //WithPaging(_source.Pager.PageSize);
+        }
+
+        public GridClient(Func<QueryDictionary<string>, Task<ItemsDTO<T>>> grpcService,
+            IMemoryDataService<T> memoryDataService, QueryDictionary<string> query, bool renderOnlyRows, string gridName,
+            Action<IGridColumnCollection<T>> columns = null, CultureInfo cultureInfo = null,
+            IColumnBuilder<T> columnBuilder = null)
+        {
+            _source = new CGrid<T>(grpcService, memoryDataService, query, renderOnlyRows, columns, cultureInfo, columnBuilder);
             Named(gridName);
             //WithPaging(_source.Pager.PageSize);
         }
@@ -158,9 +208,21 @@ namespace GridBlazor
 
         public IGridClient<T> Searchable(bool enable, bool onlyTextColumns, bool hiddenColumns)
         {
-            _source.SearchingEnabled = enable;
-            _source.SearchingOnlyTextColumns = onlyTextColumns;
-            _source.SearchingHiddenColumns = hiddenColumns;
+            return Searchable(o =>
+            {
+                o.Enabled = enable;
+                o.OnlyTextColumns = onlyTextColumns;
+                o.HiddenColumns = hiddenColumns;
+                o.SplittedWords = false;
+            });
+        }
+
+        public IGridClient<T> Searchable(Action<SearchOptions> searchOptions)
+        {
+            var options = new SearchOptions();
+            searchOptions?.Invoke(options);
+
+            _source.SearchOptions = options;
             return this;
         }
 
@@ -175,6 +237,13 @@ namespace GridBlazor
             return this;
         }
 
+        public IGridClient<T> ExtSortable(bool enable, bool hidden)
+        {
+            _source.ExtSortingEnabled = enable;
+            _source.HiddenExtSortingHeader = hidden;
+            return this;
+        }
+
         public IGridClient<T> Groupable()
         {
             return Groupable(true);
@@ -184,6 +253,25 @@ namespace GridBlazor
         {
             _source.ExtSortingEnabled = enable;
             _source.GroupingEnabled = enable;
+            return this;
+        }
+
+        public IGridClient<T> Groupable(bool enable, bool hidden)
+        {
+            _source.ExtSortingEnabled = enable;
+            _source.GroupingEnabled = enable;
+            _source.HiddenExtSortingHeader = hidden;
+            return this;
+        }
+
+        public IGridClient<T> RearrangeableColumns()
+        {
+            return RearrangeableColumns(true);
+        }
+
+        public IGridClient<T> RearrangeableColumns(bool enable)
+        {
+            _source.RearrangeColumnEnabled = enable;
             return this;
         }
 
@@ -283,6 +371,18 @@ namespace GridBlazor
             return this;
         }
 
+        public IGridClient<T> SetInitCreateValues(Func<T, Task> initCreateValues)
+        {
+            _source.InitCreateValues = initCreateValues;
+            return this;
+        }
+
+        public IGridClient<T> SetDataAnnotationsValidation(bool enabled = true)
+        {
+            _source.DataAnnotationsValidation = enabled;
+            return this;
+        }
+
         public IGridClient<T> SetCrudButtonLabels(string createLabel, string readLabel, string updateLabel, 
             string deleteLabel)
         {
@@ -290,6 +390,20 @@ namespace GridBlazor
             _source.ReadLabel = readLabel;
             _source.UpdateLabel = updateLabel;
             _source.DeleteLabel = deleteLabel;
+            return this;
+        }
+
+        public IGridClient<T> SetCrudButtonTooltips(string createTooltip, string readTooltip, string updateTooltip,
+            string deleteTooltip)
+        {
+            if(createTooltip != null)
+                _source.CreateTooltip = createTooltip;
+            if (readTooltip != null)
+                _source.ReadTooltip = readTooltip;
+            if (updateTooltip != null)
+                _source.UpdateTooltip = updateTooltip;
+            if (deleteTooltip != null)
+                _source.DeleteTooltip = deleteTooltip;
             return this;
         }
 
@@ -377,10 +491,10 @@ namespace GridBlazor
         public IGridClient<T> SetCreateComponent<TComponent>(IList<Action<object>> actions, 
             IList<Func<object, Task>> functions, object obj)
         {
-            Type readComponent = typeof(TComponent);
-            if (readComponent != null && readComponent.IsSubclassOf(typeof(GridCreateComponent<T>)))
+            Type createComponent = typeof(TComponent);
+            if (createComponent != null && createComponent.IsSubclassOf(typeof(GridCreateComponent<T>)))
             {
-                _source.CreateComponent = readComponent;
+                _source.CreateComponent = createComponent;
                 _source.CreateActions = actions;
                 _source.CreateFunctions = functions;
                 _source.CreateObject = obj;
@@ -1132,7 +1246,7 @@ namespace GridBlazor
         /// <summary>
         ///    Allow grid to show a SubGrid
         /// </summary>
-        [Obsolete("This method is obsolete. Use one including an '(string,string)[]' keys parameter.", false)]
+        [Obsolete("This method is obsolete. Use one including an '(string,string)[]' keys parameter.", true)]
         public IGridClient<T> SubGrid(Func<object[], Task<ICGrid>> subGrids, params string[] keys)
         {
             var tupleKeys = new (string, string)[keys.Length];

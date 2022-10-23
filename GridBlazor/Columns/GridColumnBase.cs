@@ -68,7 +68,9 @@ namespace GridBlazor.Columns
 
         public bool? ExcelHidden { get; set; }
 
-        public CrudHidden CrudHidden { get; protected set; } = CrudHidden.NONE;
+        public Func<T, CrudHidden> CrudHidden { get; protected set; } = x => GridShared.Columns.CrudHidden.NONE;
+
+        public Func<T, GridMode, Task> AfterChangeValue { get; set; }
 
         public Func<T, bool> ReadOnlyOnCreate { get; protected set; } = x => false;
 
@@ -97,6 +99,8 @@ namespace GridBlazor.Columns
 
         public InputType InputType { get; protected set; }
 
+        public int TextAreaRows { get; set; } = 5;
+
         public bool MultipleInput { get; protected set; } = false;
 
         public bool ToggleSwitch { get; protected set; } = false;
@@ -113,19 +117,31 @@ namespace GridBlazor.Columns
 
         public bool IsMinEnabled { get; set; } = false;
 
-        public string SumString { get; set; }
+        public bool IsCalculationEnabled { get; set; } = false;
 
-        public string AverageString { get; set; }
+        public QueryDictionary<Func<IGridColumnCollection<T>, object>> Calculations { get; set; }
 
-        public string MaxString { get; set; }
+        public QueryDictionary<Total> CalculationValues { get; set; }
 
-        public string MinString { get; set; }
+        public Total SumValue { get; set; }
+
+        public Total AverageValue { get; set; }
+
+        public Total MaxValue { get; set; }
+
+        public Total MinValue { get; set; }
 
         public (string,string)[] SubGridKeys { get; set; }
 
         public Func<object[], bool, bool, bool, bool, Task<IGrid>> SubGrids { get; set; }
 
+        public bool ShowCreateSubGrids { get; set; } = false;
+
         public string TooltipValue { get; set; }
+
+        public AutoCompleteTerm AutoCompleteTaxonomy { get; set; }
+
+        public Func<string> CustomAutoComplete { get; set; } = () => null;
 
         public IGridColumn<T> Titled(string title)
         {
@@ -478,13 +494,78 @@ namespace GridBlazor.Columns
             return this;
         }
 
+        public IGridColumn<T> Calculate(string name, Func<IGridColumnCollection<T>, object> calculation)
+        {
+            IsCalculationEnabled = true;
+            Calculations.AddParameter(name, calculation);
+            return this;
+        }
+
+        public IGridColumn<T> SetCrudHidden(Func<T, bool> create, Func<T, bool> read, Func<T, bool> update, Func<T, bool> delete)
+        {
+            CrudHidden = r =>
+            {
+                var crudHidden = GridShared.Columns.CrudHidden.NONE;
+                if (create(r)) crudHidden |= GridShared.Columns.CrudHidden.CREATE;
+                if (read((r))) crudHidden |= GridShared.Columns.CrudHidden.READ;
+                if (update(r)) crudHidden |= GridShared.Columns.CrudHidden.UPDATE;
+                if (delete(r)) crudHidden |= GridShared.Columns.CrudHidden.DELETE;
+                return crudHidden;
+            };
+            return this;
+        }
+
+
+        public IGridColumn<T> SetCrudHidden(Func<T, bool> all)
+        {
+            CrudHidden = r =>
+            {
+                var crudHidden = GridShared.Columns.CrudHidden.NONE;
+                if (all(r)) crudHidden |= GridShared.Columns.CrudHidden.CREATE | GridShared.Columns.CrudHidden.READ | 
+                        GridShared.Columns.CrudHidden.UPDATE | GridShared.Columns.CrudHidden.DELETE;
+                return crudHidden;
+            };
+            return this;
+        }
+
         public IGridColumn<T> SetCrudHidden(bool create, bool read, bool update, bool delete)
         {
-            if (create) CrudHidden |= CrudHidden.CREATE;
-            if (read) CrudHidden |= CrudHidden.READ;
-            if (update) CrudHidden |= CrudHidden.UPDATE;
-            if (delete) CrudHidden |= CrudHidden.DELETE;
+            CrudHidden = r =>
+            {
+                var crudHidden = GridShared.Columns.CrudHidden.NONE;
+                if (create) crudHidden |= GridShared.Columns.CrudHidden.CREATE;
+                if (read) crudHidden |= GridShared.Columns.CrudHidden.READ;
+                if (update) crudHidden |= GridShared.Columns.CrudHidden.UPDATE;
+                if (delete) crudHidden |= GridShared.Columns.CrudHidden.DELETE;
+                return crudHidden;
+            };
 
+            return this;
+        }
+
+        /// <inheritdoc/>
+        public IGridColumn<T> SetAutoCompleteTaxonomy(AutoCompleteTerm taxonomy)
+        {
+            AutoCompleteTaxonomy = taxonomy;
+            if (taxonomy == AutoCompleteTerm.Custom)
+            {
+                throw new ArgumentException("Must supply custom argument when using custom autocomplete");
+            }
+            CustomAutoComplete = this.ToAutocompleteFunc();
+            return this;
+        }
+
+        /// <inheritdoc/>
+        public IGridColumn<T> SetAutoCompleteTaxonomy(Func<string> custom)
+        {
+            AutoCompleteTaxonomy = AutoCompleteTerm.Custom;
+            CustomAutoComplete = custom;
+            return this;
+        }
+
+        public IGridColumn<T> SetAfterChangeValue(Func<T, GridMode, Task> afterChangeValue)
+        {
+            AfterChangeValue = afterChangeValue;
             return this;
         }
 
@@ -589,6 +670,17 @@ namespace GridBlazor.Columns
             IsSelectColumn = (false, null, null, null, null);
             InputType = inputType;
             return this;
+        }
+
+        public IGridColumn<T> SetTextArea()
+        {
+            return SetInputType(InputType.TextArea);
+        }
+
+        public IGridColumn<T> SetTextArea(int rows)
+        {
+            TextAreaRows = rows;
+            return SetTextArea();
         }
 
         public IGridColumn<T> SetInputFileType(bool? multiple = null)
@@ -709,6 +801,11 @@ namespace GridBlazor.Columns
             return (type, value);
         }
 
+        public void SetGroupLabel(Func<object, Task<string>> function)
+        {
+            Group.GroupLabel = function;
+        }
+
         public abstract bool FilterEnabled { get; set; }
 
         public ColumnFilterValue InitialFilterSettings { get; set; }
@@ -719,8 +816,10 @@ namespace GridBlazor.Columns
         public abstract IGridColumn<T> SetFilterWidgetType(string typeName);
         public abstract IGridColumn<T> SetFilterWidgetType(string typeName, object widgetData);
 
-        public abstract IGridColumn<T> SetListFilter(IEnumerable<SelectItem> selectItems, bool includeIsNull = false, 
-            bool includeIsNotNull = false);
+        public abstract IGridColumn<T> SetListFilter(IEnumerable<SelectItem> selectItems,
+            bool includeIsNull = false, bool includeIsNotNull = false);
+
+        public abstract IGridColumn<T> SetListFilter(IEnumerable<SelectItem> selectItems, Action<ListFilterOptions> filterOptions);
 
         public abstract IGridColumn<T> SetCellCssClassesContraint(Func<T, string> contraint);
         public abstract string GetCellCssClasses(object item);
@@ -732,6 +831,8 @@ namespace GridBlazor.Columns
 
         public abstract IColumnSearch<T> Search { get; }
 
+        public abstract IColumnTotals<T> Totals { get; }
+
         public abstract IColumnGroup<T> Group { get; }
 
         public abstract IColumnExpand<T> Expand { get; }
@@ -740,14 +841,25 @@ namespace GridBlazor.Columns
 
         public IGridColumn<T> SubGrid(Func<object[], bool, bool, bool, bool, Task<IGrid>> subGrids, params (string,string)[] keys)
         {
-            return SubGrid(null, subGrids, keys);
+            return SubGrid(false, null, subGrids, keys);
         }
 
         public IGridColumn<T> SubGrid(string tabGroup, Func<object[], bool, bool, bool, bool, Task<IGrid>> subGrids, params (string, string)[] keys)
         {
+            return SubGrid(false, tabGroup, subGrids, keys);
+        }
+
+        public IGridColumn<T> SubGrid(bool showCreateSubGrids, Func<object[], bool, bool, bool, bool, Task<IGrid>> subGrids, params (string, string)[] keys)
+        {
+            return SubGrid(showCreateSubGrids, null, subGrids, keys);
+        }
+
+        public IGridColumn<T> SubGrid(bool showCreateSubGrids, string tabGroup, Func<object[], bool, bool, bool, bool, Task<IGrid>> subGrids, params (string, string)[] keys)
+        {
             Hidden = true;
             TabGroup = tabGroup;
             SubGrids = subGrids;
+            ShowCreateSubGrids = showCreateSubGrids;
             SubGridKeys = keys;
             return this;
         }
@@ -784,7 +896,5 @@ namespace GridBlazor.Columns
         public abstract bool HasConstraint { get; }
 
         #endregion
-
-        public IColumnTotals<T> Totals { get; }
     }
 }

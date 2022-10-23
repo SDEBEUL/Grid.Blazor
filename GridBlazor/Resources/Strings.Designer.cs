@@ -19,7 +19,7 @@ namespace GridBlazor.Resources {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Strings {
@@ -50,6 +50,15 @@ namespace GridBlazor.Resources {
         public static string Add {
             get {
                 return ResourceManager.GetString("Add", System.Globalization.CultureInfo.CurrentCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string All {
+            get {
+                return ResourceManager.GetString("All", System.Globalization.CultureInfo.CurrentCulture);
             }
         }
         
@@ -297,6 +306,15 @@ namespace GridBlazor.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Go to.
+        /// </summary>
+        public static string Goto {
+            get {
+                return ResourceManager.GetString("Goto", System.Globalization.CultureInfo.CurrentCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Greater than.
         /// </summary>
         public static string GreaterThan {
@@ -396,6 +414,15 @@ namespace GridBlazor.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string None {
+            get {
+                return ResourceManager.GetString("None", System.Globalization.CultureInfo.CurrentCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Not equals.
         /// </summary>
         public static string NotEqual {
@@ -432,11 +459,29 @@ namespace GridBlazor.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Search phrase.
+        /// </summary>
+        public static string SearchFilterListInputText {
+            get {
+                return ResourceManager.GetString("SearchFilterListInputText", System.Globalization.CultureInfo.CurrentCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Search for ....
         /// </summary>
         public static string SearchFor {
             get {
                 return ResourceManager.GetString("SearchFor", System.Globalization.CultureInfo.CurrentCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select.
+        /// </summary>
+        public static string Select {
+            get {
+                return ResourceManager.GetString("Select", System.Globalization.CultureInfo.CurrentCulture);
             }
         }
         

@@ -279,4 +279,19 @@
   <data name="DeleteConfirmCodeError" xml:space="preserve">
     <value>Kode og bekreftelseskode må være lik for å slette dette elementet</value>
   </data>
+  <data name="Goto" xml:space="preserve">
+    <value>Gå til</value>
+  </data>
+  <data name="SearchFilterListInputText" xml:space="preserve">
+    <value>Søkeord</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>Alle</value>
+  </data>
+  <data name="None" xml:space="preserve">
+    <value>Ingen</value>
+  </data>
+  <data name="Select" xml:space="preserve">
+    <value>Plukke ut</value>
+  </data>
 </root>

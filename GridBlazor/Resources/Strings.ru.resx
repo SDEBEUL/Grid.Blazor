@@ -279,4 +279,19 @@
   <data name="DeleteConfirmCodeError" xml:space="preserve">
     <value>Код кода и код подтверждения должны быть равны для удаления этого элемента</value>
   </data>
+  <data name="Goto" xml:space="preserve">
+    <value>Перейти к</value>
+  </data>
+  <data name="SearchFilterListInputText" xml:space="preserve">
+    <value>Поисковая фраза</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>Все</value>
+  </data>
+  <data name="None" xml:space="preserve">
+    <value>Никто</value>
+  </data>
+  <data name="Select" xml:space="preserve">
+    <value>Выбирать</value>
+  </data>
 </root>

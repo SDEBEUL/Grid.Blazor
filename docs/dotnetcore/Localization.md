@@ -45,6 +45,8 @@ Then you have to call the **SetLanguage** function with the required language va
 * Brazilian Portuguese
 * Bulgarian
 * Ukrainian
+* Arabic
+* Danish
 
 ## Right to left direction
 Those languages that require right to left direction are also supported. You must configure the grid to user RTL direction using the ```SetDirection``` method of the ```GridServer``` object:
@@ -80,6 +82,7 @@ If you need to support other languages, please send me the translation of the fo
 * Drop columns here for column extended sorting
 * Files
 * Filter this column
+* Go to
 * Type
 * Value
 * Greater than

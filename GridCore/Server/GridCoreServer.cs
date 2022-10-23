@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace GridCore.Server
 
@@ -37,6 +40,20 @@ namespace GridCore.Server
         }
 
         public GridCoreServer(IEnumerable<T> items, IQueryCollection query, bool renderOnlyRows,
+            string gridName, Action<IGridColumnCollection<T>> columns = null, int? pageSize = null,
+            string language = "", string pagerViewName = GridPager.DefaultPagerViewName,
+            IColumnBuilder<T> columnBuilder = null)
+        {
+            _source = new SGridCore<T>(items, query, renderOnlyRows, pagerViewName, columnBuilder);
+            _source.RenderOptions.GridName = gridName;
+            columns?.Invoke(_source.Columns);
+            if (!string.IsNullOrWhiteSpace(language))
+                _source.Language = language;
+            if (pageSize.HasValue)
+                WithPaging(pageSize.Value);
+        }
+
+        public GridCoreServer(IEnumerable<T> items, QueryDictionary<string> query, bool renderOnlyRows,
             string gridName, Action<IGridColumnCollection<T>> columns = null, int? pageSize = null,
             string language = "", string pagerViewName = GridPager.DefaultPagerViewName,
             IColumnBuilder<T> columnBuilder = null)
@@ -146,9 +163,21 @@ namespace GridCore.Server
 
         public IGridServer<T> Searchable(bool enable, bool onlyTextColumns, bool hiddenColumns)
         {
-            _source.SearchingEnabled = enable;
-            _source.SearchingOnlyTextColumns = onlyTextColumns;
-            _source.SearchingHiddenColumns = hiddenColumns;
+            return Searchable(o =>
+            {
+                o.Enabled = enable;
+                o.OnlyTextColumns = onlyTextColumns;
+                o.HiddenColumns = hiddenColumns;
+                o.SplittedWords = false;
+            });
+        }
+
+        public IGridServer<T> Searchable(Action<SearchOptions> searchOptions)
+        {
+            var options = new SearchOptions();
+            searchOptions?.Invoke(options);
+
+            _source.SearchOptions = options;
             return this;
         }
 
@@ -161,7 +190,14 @@ namespace GridCore.Server
         {
             _source.ExtSortingEnabled = enable;
             return this;
-        }      
+        }
+
+        public IGridServer<T> ExtSortable(bool enable, bool hidden)
+        {
+            _source.ExtSortingEnabled = enable;
+            _source.HiddenExtSortingHeader = hidden;
+            return this;
+        }
 
         public IGridServer<T> Groupable()
         {
@@ -172,6 +208,14 @@ namespace GridCore.Server
         {
             _source.ExtSortingEnabled = enable;
             _source.GroupingEnabled = enable;
+            return this;
+        }
+
+        public IGridServer<T> Groupable(bool enable, bool hidden)
+        {
+            _source.ExtSortingEnabled = enable;
+            _source.GroupingEnabled = enable;
+            _source.HiddenExtSortingHeader = hidden;
             return this;
         }
 
@@ -275,6 +319,19 @@ namespace GridCore.Server
             return this;
         }
 
+        public IGridServer<T> SetRemoveDiacritics<R>(string methodName)
+        {
+            MethodInfo removeDiacritics = typeof(R).GetMethod(methodName, new[] { typeof(string) });
+            _source.RemoveDiacritics = removeDiacritics;
+            return this;
+        }
+
+        public IGridServer<T> SetToListAsyncFunc(Func<IQueryable<T>, Task<IList<T>>> toListAsync)
+        {
+            _source.SetToListAsyncFunc(toListAsync);
+            return this;
+        }
+
         /// <summary>
         ///     Items, displaying in the grid view
         /// </summary>
@@ -286,6 +343,14 @@ namespace GridCore.Server
                 return new ItemsDTO<T>(items, totals, new PagerDTO(_source.EnablePaging, _source.Pager.PageSize,
                     _source.Pager.CurrentPage, _source.ItemsCount));
             }
+        }
+
+        public async Task<ItemsDTO<T>> GetItemsToDisplayAsync(Func<IQueryable<T>, Task<IList<T>>> toListAsync)
+        {
+            var items = await _source.GetItemsToDisplayAsync(toListAsync);
+            var totals = _source.GetTotals();
+            return new ItemsDTO<T>(items, totals, new PagerDTO(_source.EnablePaging, _source.Pager.PageSize,
+                _source.Pager.CurrentPage, _source.ItemsCount));
         }
 
         /// <summary>
