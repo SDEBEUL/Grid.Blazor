@@ -58,19 +58,36 @@ namespace GridBlazor.Filtering
 
             // workaround for lack of $search OData support
             var search = new List<string>();
-            if (_grid.SearchingEnabled && !string.IsNullOrWhiteSpace(_searchSettings.SearchValue))
+            if (_grid.SearchOptions.Enabled && !string.IsNullOrWhiteSpace(_searchSettings.SearchValue))
             {
                 foreach (IGridColumn column in _grid.Columns)
                 {
                     var gridColumn = column as IGridColumn<T>;
                     if (gridColumn == null) continue;
-                    if (!_grid.SearchingHiddenColumns && gridColumn.Hidden) continue;
+                    if (!_grid.SearchOptions.HiddenColumns && gridColumn.Hidden) continue;
                     if (gridColumn.Filter == null) continue;                   
                     if (!gridColumn.Filter.IsTextColumn()) continue;
 
                     List<ColumnFilterValue> options = new List<ColumnFilterValue>();
-                    var columnFilterValue = new ColumnFilterValue(column.Name, GridFilterType.Contains, _searchSettings.SearchValue);
-                    options.Add(columnFilterValue);
+                    if (_grid.SearchOptions.SplittedWords)
+                    {
+                        var searchWords = _searchSettings.SearchValue.Split(' ');
+                        foreach (var searchWord in searchWords)
+                        {
+                            var columnFilterValue = new ColumnFilterValue(column.Name, GridFilterType.Contains, searchWord);
+                            options.Add(columnFilterValue);
+                        }
+                        if (searchWords.Length > 1)
+                        {
+                            var columnFilterCondition = new ColumnFilterValue(column.Name, GridFilterType.Condition, GridFilterCondition.Or.ToString());
+                            options.Add(columnFilterCondition);
+                        }
+                    }
+                    else
+                    {
+                        var columnFilterValue = new ColumnFilterValue(column.Name, GridFilterType.Contains, _searchSettings.SearchValue);
+                        options.Add(columnFilterValue);
+                    }
 
                     var filter = gridColumn.Filter.GetFilter(options);
                     if (!string.IsNullOrWhiteSpace(filter))

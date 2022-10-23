@@ -279,4 +279,19 @@
   <data name="DeleteConfirmCodeError" xml:space="preserve">
     <value>Il codice e il codice di conferma devono essere uguali per eliminare questo elemento</value>
   </data>
+  <data name="Goto" xml:space="preserve">
+    <value>Vai a</value>
+  </data>
+  <data name="SearchFilterListInputText" xml:space="preserve">
+    <value>Frase di ricerca</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>Tutto</value>
+  </data>
+  <data name="None" xml:space="preserve">
+    <value>Nessuno</value>
+  </data>
+  <data name="Select" xml:space="preserve">
+    <value>Selezionare</value>
+  </data>
 </root>

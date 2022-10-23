@@ -5,6 +5,7 @@ using GridShared.Grouping;
 using GridShared.OData;
 using GridShared.Searching;
 using GridShared.Sorting;
+using GridShared.Totals;
 using GridShared.Utility;
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,11 @@ namespace GridBlazor.Columns
         ///     Searchers collection for this columns
         /// </summary>
         private readonly IColumnSearch<T> _search;
+
+        /// <summary>
+        ///     Totals collection for this columns
+        /// </summary>
+        protected readonly IColumnTotals<T> _totals;
 
         /// <summary>
         ///     Groupers collection for this columns
@@ -88,6 +94,7 @@ namespace GridBlazor.Columns
                 _orderers.Insert(0, new OrderByGridOrderer<T, TDataType>(expression, comparer));
                 _filter = new DefaultColumnFilter<T, TDataType>(expression);
                 _search = new DefaultColumnSearch<T, TDataType>(expression);
+                _totals = new DefaultColumnTotals<T, TDataType>(expression);
                 _group = new DefaultColumnGroup<T, TDataType>(expression);
                 _expand = new DefaultColumnExpand<T, TDataType>(expression);
                 //Generate unique column name:
@@ -95,6 +102,9 @@ namespace GridBlazor.Columns
                 Name = FieldName;
                 Title = Name; //Using the same name by default
             }
+
+            Calculations = new QueryDictionary<Func<IGridColumnCollection<T>, object>>();
+            CalculationValues = new QueryDictionary<Total>();
         }
 
         public override IEnumerable<IColumnOrderer<T>> Orderers
@@ -118,6 +128,11 @@ namespace GridBlazor.Columns
         public override IColumnSearch<T> Search
         {
             get { return _search; }
+        }
+
+        public override IColumnTotals<T> Totals
+        {
+            get { return _totals; }
         }
 
         public override IColumnGroup<T> Group
@@ -167,10 +182,22 @@ namespace GridBlazor.Columns
             return this;
         }
 
-        public override IGridColumn<T> SetListFilter(IEnumerable<SelectItem> selectItems, bool includeIsNull = false, 
-            bool includeIsNotNull = false)
+        public override IGridColumn<T> SetListFilter(IEnumerable<SelectItem> selectItems,
+            bool includeIsNull = false, bool includeIsNotNull = false)
         {
-            return SetFilterWidgetType(SelectItem.ListFilter, (selectItems, includeIsNull, includeIsNotNull));
+            return SetListFilter(selectItems, o =>
+            {
+                o.IncludeIsNotNull = includeIsNotNull;
+                o.IncludeIsNull = includeIsNull;
+            });
+        }
+
+        public override IGridColumn<T> SetListFilter(IEnumerable<SelectItem> selectItems, Action<ListFilterOptions> optionsAction)
+        {
+            var options = new ListFilterOptions();
+            optionsAction?.Invoke(options);
+
+            return SetFilterWidgetType(SelectItem.ListFilter, (selectItems, options));
         }
 
         public override IGridColumn<T> SortInitialDirection(GridSortDirection direction)

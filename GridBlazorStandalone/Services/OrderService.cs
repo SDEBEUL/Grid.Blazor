@@ -40,7 +40,8 @@ namespace GridBlazorStandalone.Services
                         .Filterable()
                         .WithMultipleFilters()
                         .Groupable(true)
-                        .Searchable(true, false, false);
+                        .Searchable(true, false, false)
+                        .SetRemoveDiacritics<StringUtils>("RemoveDiacritics");
 
             var items = server.ItemsToDisplay;
             return items;
@@ -55,7 +56,8 @@ namespace GridBlazorStandalone.Services
                         .Filterable()
                         .WithMultipleFilters()
                         .Groupable(true)
-                        .Searchable(true, false, false);
+                        .Searchable(true, false, false)
+                        .SetRemoveDiacritics<StringUtils>("RemoveDiacritics");
 
             var items = server.ItemsToDisplay;
             return items;
@@ -70,7 +72,8 @@ namespace GridBlazorStandalone.Services
                         .Filterable()
                         .WithMultipleFilters()
                         .Groupable(true)
-                        .Searchable(true, false, false);
+                        .Searchable(true, false, false)
+                        .SetRemoveDiacritics<StringUtils>("RemoveDiacritics");
 
             // return items to displays
             var items = server.ItemsToDisplay;
@@ -94,7 +97,8 @@ namespace GridBlazorStandalone.Services
                         .Filterable()
                         .WithMultipleFilters()
                         .Groupable(true)
-                        .Searchable(true, false, false);
+                        .Searchable(true, false, false)
+                        .SetRemoveDiacritics<StringUtils>("RemoveDiacritics");
 
             // return items to displays
             var items = server.ItemsToDisplay;
@@ -192,6 +196,28 @@ namespace GridBlazorStandalone.Services
             {
                 throw new GridException("ORDSRV-03", "Error deleting the order");
             }
+        }
+
+        public async Task<decimal?> GetMaxFreight(string clientName, QueryDictionary<StringValues> query)
+        {
+            var server = new GridCoreServer<Order>(Orders.Where(o => o.Customer.CompanyName == clientName), query, true, "ordersGrid", null)
+                .AutoGenerateColumns()
+                .Sortable()
+                .Filterable()
+                .WithMultipleFilters()
+                .SetRemoveDiacritics<StringUtils>("RemoveDiacritics");
+            return await Task.FromResult(server.ItemsToDisplay.Items.Max(r => r.Freight));
+        }
+
+        public async Task<decimal?> GetMinFreight(string clientName, QueryDictionary<StringValues> query)
+        {
+            var server = new GridCoreServer<Order>(Orders.Where(o => o.Customer.CompanyName == clientName), query, true, "ordersGrid", null)
+                .AutoGenerateColumns()
+                .Sortable()
+                .Filterable()
+                .WithMultipleFilters()
+                .SetRemoveDiacritics<StringUtils>("RemoveDiacritics");
+            return await Task.FromResult(server.ItemsToDisplay.Items.Min(r => r.Freight));
         }
 
         private static void Init()
@@ -1078,5 +1104,7 @@ namespace GridBlazorStandalone.Services
         ItemsDTO<Order> GetOrdersWithErrorGridRows(Action<IGridColumnCollection<Order>> columns, QueryDictionary<StringValues> query);
         Task Add1ToFreight(int OrderId);
         Task Subtract1ToFreight(int OrderId);
+        Task<decimal?> GetMaxFreight(string clientName, QueryDictionary<StringValues> query);
+        Task<decimal?> GetMinFreight(string clientName, QueryDictionary<StringValues> query);
     }
 }

@@ -7,19 +7,20 @@
     <EnableDefaultEmbeddedResourceItems>False</EnableDefaultEmbeddedResourceItems>
     <Product>GridCore</Product>
     <PackageId>GridCore</PackageId>
-    <Version>5.0.0-preview-1</Version>
+    <Version>5.4.2</Version>
     <Title>GridCore</Title>
     <Description>Grid core component</Description>
     <Summary>Grid core component</Summary>
     <Authors>Gustau Navarro</Authors>
-    <PackageTags>grid</PackageTags>
+    <PackageTags>grid blazor table crud rest grpc</PackageTags>
     <PackageProjectUrl>https://github.com/gustavnavar/Grid.Blazor</PackageProjectUrl>
     <PackageLicenseExpression>LGPL-2.1-only</PackageLicenseExpression>
+	<PackageReleaseNotes>Supports .NET Standard 2.1, .NET 5.0, .NET 6.0</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-    <PackageReference Include="Microsoft.AspNetCore.Components" Version="6.0.0-rc.2.21480.10" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="6.0.0-rc.2.21480.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="6.0" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="6.0" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
@@ -78,9 +79,9 @@
     <EmbeddedResource Include="Resources\Strings.se.resx" LogicalName="GridCore.Resources.Strings.se.resources">
       <Generator></Generator>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Strings.sr.resx" LogicalName="GridCore.Resources.Strings.sr.resources">
-      <Generator></Generator>
-    </EmbeddedResource>
+	<EmbeddedResource Include="Resources\Strings.sr.resx" LogicalName="GridCore.Resources.Strings.sr.resources">
+	  <Generator></Generator>
+	</EmbeddedResource>
     <EmbeddedResource Include="Resources\Strings.hr.resx" LogicalName="GridCore.Resources.Strings.hr.resources">
       <Generator></Generator>
     </EmbeddedResource>
@@ -105,6 +106,12 @@
     <EmbeddedResource Include="Resources\Strings.uk.resx" LogicalName="GridCore.Resources.Strings.uk.resources">
       <Generator></Generator>
     </EmbeddedResource>
+	<EmbeddedResource Include="Resources\Strings.ar.resx" LogicalName="GridCore.Resources.Strings.ar.resources">
+      <Generator></Generator>
+	</EmbeddedResource>
+	<EmbeddedResource Include="Resources\Strings.da-DK.resx" LogicalName="GridCore.Resources.Strings.da-DK.resources">
+		<Generator></Generator>
+	</EmbeddedResource>
   </ItemGroup>
   
   <ItemGroup>

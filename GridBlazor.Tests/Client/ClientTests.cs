@@ -43,8 +43,8 @@ namespace GridBlazor.Tests.Client
             Assert.IsTrue(_client.Grid.ComponentOptions.AllowMultipleFilters);
 
             _client.Searchable();
-            Assert.IsTrue(_client.Grid.SearchingEnabled);
-            Assert.IsTrue(_client.Grid.SearchingOnlyTextColumns);
+            Assert.IsTrue(_client.Grid.SearchOptions.Enabled);
+            Assert.IsTrue(_client.Grid.SearchOptions.OnlyTextColumns);
 
             _client.Named("test");
             Assert.AreEqual(_client.Grid.ComponentOptions.GridName, "test");
@@ -64,6 +64,9 @@ namespace GridBlazor.Tests.Client
             _client.Groupable(false);
             Assert.IsFalse(_client.Grid.ExtSortingEnabled);
             Assert.IsFalse(_client.Grid.GroupingEnabled);
+
+            _client.RearrangeableColumns(true);
+            Assert.IsTrue(_client.Grid.RearrangeColumnEnabled);
         }
     }
 }

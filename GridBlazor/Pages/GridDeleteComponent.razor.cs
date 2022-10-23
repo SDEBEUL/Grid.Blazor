@@ -13,7 +13,6 @@ namespace GridBlazor.Pages
 {
     public partial class GridDeleteComponent<T> : ICustomGridComponent<T>
     {
-        private int _sequence = 0;
         private bool _shouldRender = false;
         private QueryDictionary<RenderFragment> _renderFragments;
         private IEnumerable<string> _tabGroups;
@@ -37,6 +36,8 @@ namespace GridBlazor.Pages
         protected override async Task OnParametersSetAsync()
         {
             _renderFragments = new QueryDictionary<RenderFragment>();
+            Children = new QueryDictionary<VariableReference>();
+
             foreach (var column in GridComponent.Grid.Columns)
             {
                 // Name must have a non empty value
@@ -50,28 +51,15 @@ namespace GridBlazor.Pages
                     grid.Direction = GridComponent.Grid.Direction;
                     grid.FixedValues = values;
                     VariableReference reference = new VariableReference();
-                    if (Children.ContainsKey(column.Name))
-                        Children[column.Name] = reference;
-                    else
-                        Children.Add(column.Name, reference);
-                    if (_renderFragments.ContainsKey(column.Name))
-                        _renderFragments[column.Name] = CreateSubGridComponent(grid, reference);
-                    else
-                        _renderFragments.Add(column.Name, CreateSubGridComponent(grid, reference));
+                    Children.AddParameter(column.Name, reference);
+                    _renderFragments.AddParameter(column.Name, CreateSubGridComponent(grid, reference));
                 }
                 else if (column.DeleteComponentType != null)
                 {
                     VariableReference reference = new VariableReference();
-                    if (Children.ContainsKey(column.Name))
-                        Children[column.Name] = reference;
-                    else
-                        Children.Add(column.Name, reference);
-                    if (_renderFragments.ContainsKey(column.Name))
-                        _renderFragments[column.Name] = GridCellComponent<T>.CreateComponent(_sequence,
-                            GridComponent, column.DeleteComponentType, column, Item, null, true, reference);
-                    else
-                        _renderFragments.Add(column.Name, GridCellComponent<T>.CreateComponent(_sequence,
-                            GridComponent, column.DeleteComponentType, column, Item, null, true, reference));
+                    Children.AddParameter(column.Name, reference);
+                    _renderFragments.AddParameter(column.Name, GridCellComponent<T>.CreateComponent(GridComponent, 
+                        column.DeleteComponentType, column, Item, null, true, reference));
                 }
             }
             _tabGroups = GridComponent.Grid.Columns
@@ -87,11 +75,11 @@ namespace GridBlazor.Pages
                         (buttonCrudComponent.DeleteModeAsync != null && await buttonCrudComponent.DeleteModeAsync(Item)) ||
                         (buttonCrudComponent.GridMode.HasFlag(GridMode.Delete)))
                     {
-                        _buttonCrudComponentVisibility.Add(key, true);
+                        _buttonCrudComponentVisibility.AddParameter(key, true);
                     }
                     else
                     {
-                        _buttonCrudComponentVisibility.Add(key, false);
+                        _buttonCrudComponentVisibility.AddParameter(key, false);
                     }
                 }
             }
@@ -102,9 +90,9 @@ namespace GridBlazor.Pages
         private RenderFragment CreateSubGridComponent(ICGrid grid, VariableReference reference) => builder =>
         {
             Type gridComponentType = typeof(GridComponent<>).MakeGenericType(grid.Type);
-            builder.OpenComponent(++_sequence, gridComponentType);
-            builder.AddAttribute(++_sequence, "Grid", grid);
-            builder.AddComponentReferenceCapture(++_sequence, r => reference.Variable = r);
+            builder.OpenComponent(0, gridComponentType);
+            builder.AddAttribute(1, "Grid", grid);
+            builder.AddComponentReferenceCapture(2, r => reference.Variable = r);
             builder.CloseComponent();
         };
 
@@ -142,8 +130,9 @@ namespace GridBlazor.Pages
 
             try
             {
-                _tabGroups = null;
-                await GridComponent.DeleteItem(this);
+                bool isValid = await GridComponent.DeleteItem(this);
+                if(isValid)
+                    _tabGroups = null;
             }
             catch (GridException e)
             {

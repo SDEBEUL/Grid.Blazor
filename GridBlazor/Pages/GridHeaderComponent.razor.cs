@@ -25,7 +25,6 @@ namespace GridBlazor.Pages
         private const string FilteredButtonCssClass = "filtered";
         private const string FilterButtonCss = "grid-filter-btn";
 
-        private int _sequence = 0;
         private bool _shouldRender = false;
         protected bool _isFilterVisible = false;
         protected bool _isTooltipVisible = false;
@@ -35,6 +34,8 @@ namespace GridBlazor.Pages
         protected StringValues _clearInitFilter;
         private bool? _allChecked = null;
         private bool _showAllChecked = false;
+
+        protected string _dropClass = "";
 
         protected string _cssStyles;
         protected string _cssClass;
@@ -142,10 +143,10 @@ namespace GridBlazor.Pages
 
         private RenderFragment CreateFilterWidgetComponent() => builder =>
         {
-            builder.OpenComponent<CascadingValue<GridHeaderComponent<T>>>(++_sequence);
-            builder.AddAttribute(++_sequence, "Value", this);
-            builder.AddAttribute(++_sequence, "Name", "GridHeaderComponent");
-            builder.AddAttribute(++_sequence, "ChildContent", CreateFilterChildContent());
+            builder.OpenComponent<CascadingValue<GridHeaderComponent<T>>>(0);
+            builder.AddAttribute(1, "Value", this);
+            builder.AddAttribute(2, "Name", "GridHeaderComponent");
+            builder.AddAttribute(3, "ChildContent", CreateFilterChildContent());
             builder.CloseComponent();
         };
 
@@ -154,15 +155,15 @@ namespace GridBlazor.Pages
             try
             {
                 Type filterWidget = Filters[Column.FilterWidgetTypeName];
-                builder.OpenComponent(++_sequence, filterWidget);
+                builder.OpenComponent(0, filterWidget);
             }
             catch (Exception)
             {
-                builder.OpenComponent<TextFilterComponent<T>>(++_sequence);
+                builder.OpenComponent<TextFilterComponent<T>>(1);
             }
-            builder.AddAttribute(++_sequence, "Visible", _isFilterVisible);
-            builder.AddAttribute(++_sequence, "ColumnName", Column.Name);
-            builder.AddAttribute(++_sequence, "FilterSettings", _filterSettings);
+            builder.AddAttribute(2, "Visible", _isFilterVisible);
+            builder.AddAttribute(3, "ColumnName", Column.Name);
+            builder.AddAttribute(4, "FilterSettings", _filterSettings);
             builder.CloseComponent();
         };
 
@@ -276,6 +277,37 @@ namespace GridBlazor.Pages
             _shouldRender = true;
         }
 
+        protected void HandleDragEnter()
+        {
+            if (!GridComponent.Grid.RearrangeColumnEnabled)
+                return;
+            
+            _dropClass = "grid-header-drag-over";
+            _shouldRender = true;
+            Console.WriteLine("DragEnter");
+        }
+
+        protected void HandleDragLeave()
+        {
+            if (!GridComponent.Grid.RearrangeColumnEnabled)
+                return;
+
+            _dropClass = "";
+            _shouldRender = true;
+            Console.WriteLine("DragLeave");
+        }
+
+        protected async Task HandleDrop()
+        {
+            if (!GridComponent.Grid.RearrangeColumnEnabled)
+                return;
+
+            _dropClass = "";
+            _shouldRender = true;
+
+            await GridComponent.HandleColumnRearranged(this);
+        }
+
         private void HideFilter()
         {
             if (_isFilterVisible)
@@ -323,6 +355,7 @@ namespace GridBlazor.Pages
                     }
                     else
                     {
+                        // _allChecked = null is not required. It would disable all values except for rows in ExceptCheckedRows dictionary 
                         _showAllChecked = false;
                     }
                 }

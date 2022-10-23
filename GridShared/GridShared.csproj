@@ -3,20 +3,21 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1;net5.0</TargetFrameworks>
     <LangVersion>8.0</LangVersion>
-    <Version>5.0.0-preview-1</Version>
+    <Version>5.4.0</Version>
     <Title>GridShared</Title>
     <Description>Support library for GridBlazor and GridMvcCore component libraries</Description>
     <Summary>Support library for GridBlazor and GridMvcCore component libraries</Summary>
     <Authors>Gustau Navarro</Authors>
-    <PackageTags>grid blazor mvc</PackageTags>
+    <PackageTags>grid blazor mvc table crud rest grpc</PackageTags>
     <PackageProjectUrl>https://github.com/gustavnavar/Grid.Blazor</PackageProjectUrl>
     <PackageLicenseExpression>LGPL-2.1-only</PackageLicenseExpression>
+	<PackageReleaseNotes>Supports .NET Standard 2.1, .NET 5.0, .NET 6.0</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="6.0.0-preview.4.21253.5" />
-    <PackageReference Include="Microsoft.Extensions.Primitives" Version="6.0.0-rc.2.21480.5" />
-    <PackageReference Include="System.Text.Json" Version="6.0.0-rc.2.21480.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0" />
+    <PackageReference Include="Microsoft.Extensions.Primitives" Version="6.0" />
+    <PackageReference Include="System.Text.Json" Version="6.0" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">

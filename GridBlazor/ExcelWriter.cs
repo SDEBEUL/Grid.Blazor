@@ -19,16 +19,32 @@ namespace GridBlazor
         public int RowIndex { get; set; }
         public int ColSpan { get; set; }
         public int RowSpan { get; set; }
+        public CellValues Type { get; set; }
 
         public ExcelCell()
         {
         }
 
-        public ExcelCell(string content)
+        public ExcelCell(string value, Type type = null)
         {
-            Content = content;
+            Content = value;
             ColSpan = 1;
             RowSpan = 1;
+
+            if(type == null)
+                Type = CellValues.InlineString;
+            else if (type == typeof(Int32) || type == typeof(double) || type == typeof(decimal) || type == typeof(byte)
+                || type == typeof(Single) || type == typeof(float) || type == typeof(Int64) || type == typeof(Int16)
+                || type == typeof(UInt64) || type == typeof(UInt32) || type == typeof(UInt16))
+                Type = CellValues.Number;
+            else if (type == typeof(DateTime) || type == typeof(DateTimeOffset) || type == typeof(decimal) || type == typeof(byte)
+                || type == typeof(Single) || type == typeof(float) || type == typeof(Int64) || type == typeof(Int16)
+                || type == typeof(UInt64) || type == typeof(UInt32) || type == typeof(UInt16))
+                Type = CellValues.Date;
+            else if(type == typeof(bool))
+                Type = CellValues.Boolean;
+            else
+                Type = CellValues.InlineString;
         }
     }
 
@@ -78,27 +94,26 @@ namespace GridBlazor
 			return colLetter;
 		}
 
-		private Cell CreateCell(string header, UInt32 index, string text)
-		{
-			Cell cell;
-			double number;
+        private Cell CreateCell(string header, UInt32 index, string text, CellValues type)
+        {
+            Cell cell;
 
-			if (double.TryParse(text, out number))
-			{
-				cell = new Cell
-				{
-					DataType = CellValues.Number,
-					CellReference = header + index,
-					CellValue = new CellValue(number.ToString(CultureInfo.InvariantCulture))
-				};
-			}
-			else
-			{
-				cell = new Cell
-				{
-					DataType = CellValues.InlineString,
-					CellReference = header + index
-				};
+            if (double.TryParse(text, out number))
+            {
+                cell = new Cell
+                {
+                    DataType = CellValues.Number,
+                    CellReference = header + index,
+                    CellValue = new CellValue(number.ToString(CultureInfo.InvariantCulture))
+                };
+            }
+            else
+            {
+                cell = new Cell
+                {
+                    DataType = CellValues.InlineString,
+                    CellReference = header + index
+                };
 
 				var istring = new InlineString();
 				var t = new Text { Text = text };
@@ -135,22 +150,22 @@ namespace GridBlazor
 			}
 			excelData.Cells.Add(header);
 
-			foreach (var item in items)
-			{
-				List<ExcelCell> row = new List<ExcelCell>();
-				foreach (IGridColumn column in columns)
-				{
-					if (!(column.ExcelHidden ?? column.Hidden))
-					{
-						var cell = column.GetCell(item) as GridCell;
-						cell.Encode = false;
-						row.Add(new ExcelCell(cell.ToString()));
-					}
-				}
-				excelData.Cells.Add(row);
-			}
-			return GenerateExcel(excelData);
-		}
+            foreach (var item in items)
+            {
+                List<ExcelCell> row = new List<ExcelCell>();
+                foreach (IGridColumn column in columns)
+                {
+                    if (!(column.ExcelHidden ?? column.Hidden))
+                    {
+                        var cell = column.GetCell(item) as GridCell;
+                        cell.Encode = false;
+                        row.Add(new ExcelCell(cell.ToString()));
+                    }    
+                }
+                excelData.Cells.Add(row);
+            }
+            return GenerateExcel(excelData);
+        }
 
 		public byte[] GenerateExcel(ExcelData data)
 		{
@@ -192,20 +207,20 @@ namespace GridBlazor
 			Row row;
 			var cellIdex = 0;
 
-			// Add sheet data
-			foreach (var rowData in data.Cells)
-			{
-				cellIdex = 0;
-				row = new Row { RowIndex = ++rowIdex };
-				sheetData.AppendChild(row);
-				foreach (var cellData in rowData)
-				{
-					var cell = CreateCell(ColumnLetter(cellIdex++), rowIdex,
-						cellData.Content ?? string.Empty);
-					row.AppendChild(cell);
-				}
-			}
-		}
+            // Add sheet data
+            foreach (var rowData in data.Cells)
+            {
+                cellIdex = 0;
+                row = new Row { RowIndex = ++rowIdex };
+                sheetData.AppendChild(row);
+                foreach (var cellData in rowData)
+                {
+                    var cell = CreateCell(ColumnLetter(cellIdex++), rowIdex,
+                        cellData.Content ?? string.Empty);
+                    row.AppendChild(cell);
+                }
+            }
+        }
 
 		private void AppendDataToExtendedSheet(Worksheet worksheet, SheetData sheetData,
 			ExcelData data)
@@ -214,24 +229,24 @@ namespace GridBlazor
 			Row row;
 			MergeCells mergeCells = new MergeCells();
 
-			// Add sheet data
-			foreach (var rowData in data.Cells)
-			{
-				row = new Row { RowIndex = ++rowIdex };
-				sheetData.AppendChild(row);
-				foreach (var excelCell in rowData)
-				{
-					var cell = CreateCell(ColumnLetter(excelCell.ColumnIndex),
-						(uint)(excelCell.RowIndex + 1), excelCell.Content ?? string.Empty);
-					row.AppendChild(cell);
-					if (excelCell.ColSpan > 1 || excelCell.RowSpan > 1)
-					{
-						var mergeCell = CreateMergeCell(excelCell);
-						mergeCells.Append(mergeCell);
-					}
-				}
-			}
-			worksheet.InsertAfter(mergeCells, worksheet.Elements<SheetData>().First());
-		}
-	}
+            // Add sheet data
+            foreach (var rowData in data.Cells)
+            {
+                row = new Row { RowIndex = ++rowIdex };
+                sheetData.AppendChild(row);
+                foreach (var excelCell in rowData)
+                {
+                    var cell = CreateCell(ColumnLetter(excelCell.ColumnIndex),
+                        (uint)(excelCell.RowIndex + 1), excelCell.Content ?? string.Empty);
+                    row.AppendChild(cell);
+                    if (excelCell.ColSpan > 1 || excelCell.RowSpan > 1)
+                    {
+                        var mergeCell = CreateMergeCell(excelCell);
+                        mergeCells.Append(mergeCell);
+                    }
+                }
+            }
+            worksheet.InsertAfter(mergeCells, worksheet.Elements<SheetData>().First());
+        }
+    }
 }

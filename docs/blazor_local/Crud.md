@@ -160,12 +160,17 @@ You can also configure the "read only on create" and/or "read only on update" be
 
 If a column is a date that has to be shown as ```date```, ```time```, ```week```, ```month``` or ```datetime-local``` in the CRUD forms, the column definition should use the  **SetInputType** method in order to get the correct format.
 
-If a column is a string that has to be shown as ```<textarea>``` in the CRUD forms, the column definition should use the  **SetInputType** method in order to get the correct html element.
+If a column is a string that has to be shown as ```<textarea>``` in the CRUD forms, the column definition should use the  **SetTextArea** or the  **SetInputType** method in order to get the correct html element.
 
 The **SetInputType** method has 1 required parameter:
 Parameter | Description
 --------- | -----------
 inputType | ```InputType``` enum. Its value can be ```InputType.TextArea```, ```InputType.Date```, ```InputType.Time```, ```InputType.Month```, ```InputType.Week``` or ```InputType.DateTimeLocal```
+
+The **SetTextArea** method has 1 optional parameter:
+Parameter | Description
+--------- | -----------
+rows | integer to select the number or rows of the ```<textarea>``` element
 
 You can also add components on the CRUD forms using the ```RenderCrudComponentAs<TComponent>``` method. You must define these columns as **Hidden** to show them just on CRUD forms.
 
@@ -174,7 +179,7 @@ You can configure the width of the column input element using the ```SetCrudWidt
 And finally all columns included in the grid but not in the CRUD forms should be configured as "CRUD hidden" using the ```SetCrudHidden(true)``` method.
 
 **Notes**: 
-- You can have more granularity in the "CRUD hidden" configuration. You can use the ```SetCrudHidden(bool create, bool read, bool update, bool delete)``` method to configure the columns that will be hidden on each type of form.
+- You can have more granularity in the "CRUD hidden" configuration. You can use the ```SetCrudHidden(bool create, bool read, bool update, bool delete)``` method to configure the columns that will be hidden on each type of form. You can also use the ```SetCrudHidden(Func<T,bool> create, Func<T,bool> read, Func<T,bool> update, Func<T,bool> delete)``` method to configure the columns that will be hidden on each type of form depending on the value of ```T``` properties.
 - You can have more granularity in the components configuration.  You can use the ```RenderCrudComponentAs<TCreateComponent, TReadComponent, TUpdateComponent, TDeleteComponent>``` method to configure the components that will be shown on each type of form. Id you don't want to show any component for a specific type of form you must use ```NullComponent```
 
 This is an example of column definition:
@@ -232,17 +237,33 @@ You must also configure CRUD using the **Crud(bool enabled, ICrudDataService<T> 
         .Crud(true, employeeService, employeeFileService);           
 ```
 
-The parameter **crudFileService** of the **Crud** method must be a class that implements the **ICrudFileService<T>** interface. This interface has 3 methods:
+The parameter **crudFileService** of the **Crud** method must be a class that implements the **ICrudFileService<T>** interface.
+
+---
+**For .NET Core 3.1 and 5.0:**
+This interface has 3 methods:
 - ```Task InsertFiles(T item, IQueryDictionary<IFileListEntry[]> files);```
 - ```Task<T> UpdateFiles(T item, IQueryDictionary<IFileListEntry[]> files);```
 - ```Task DeleteFiles(params object[] keys);```
-
-These methods will be responsible to perform all file operations either on a server file repository, or a database or a cloud service as Azure Blob Storage or Amazon S3.
 
 And finally you have to load this ```javascript``` on the html page:
 ```
     <script src="_content/Agno.BlazorInputFile/inputfile.js"></script>
 ```
+---
+
+---
+**For .NET 6.0 and later:**
+This interface has 3 methods:
+- ```Task InsertFiles(T item, IQueryDictionary<IBrowserFile[]> files);```
+- ```Task<T> UpdateFiles(T item, IQueryDictionary<IBrowserFile[]> files);```
+- ```Task DeleteFiles(params object[] keys);```
+
+No javascript is required for .Net 6.0 or later.
+
+---
+
+These methods will be responsible to perform all file operations either on a server file repository, or a database or a cloud service as Azure Blob Storage or Amazon S3.
 
 **Notes:**
 - ```InsertFiles``` method will be executed after inserting the new record on the database. So it's executed after the ```Insert``` method of your ```ICrudDataService<T>``` implementation. This will ensure the record includes the primary keys in case of auto-generated ones. If the ```InsertFiles``` method does any modification to the record that requires to be applied to the database, it will no be automatically updated. So you will have to call the ```Update``` method of your ```ICrudDataService<T>``` implementation from the ```InsertFiles``` method.
@@ -250,6 +271,24 @@ And finally you have to load this ```javascript``` on the html page:
 - ```DeleteFiles``` method will be executed before deleting the record on the database. So it's executed bofore the ```Delete``` method of your ```ICrudDataService<T>``` implementation.
 
 You can see how it works clicking on the "Employees" button of this sample https://gridblazor.azurewebsites.net/embedded
+
+## Input Autocomplete attribute 
+
+You can add an AutoComplete attribute to the non-disabled/non-readonly input fields in the Create and Update components, allowing for refinement over the suggested autocomplete values when using the fields.
+
+It supports all defined auto complete terms defined in the standard. 
+
+Additionally, it supports defeating auto complete (preventing any suggestions) and custom terms. FieldName is a predefined custom term for ease of use.
+
+To enable it, the column definition should use the  **SetAutoCompleteTaxonomy** method in order to set one of the auto complete terms defined in the standard:
+```c#   
+    c.Add(o => o.Freight).Titled(SharedResource.Freight).SetAutoCompleteTaxonomy(AutoCompleteTerm.Defeat);   
+```
+
+Otherwise, if you want to use a custom term, you can use a function as parameter of the  **SetAutoCompleteTaxonomy** method:
+```c#   
+    c.Add(o => o.Freight).Titled(SharedResource.Freight).SetAutoCompleteTaxonomy(() => "custom-term");   
+```
 
 ## Code confirmation to perform CRUD
 
@@ -322,6 +361,18 @@ You can also use text labels for the header buttons. In this the configuration i
         .SetHeaderCrudButtons(true);
         .SetCrudButtonLabels("Add", "View", "Edit", "Delete");
 ```
+
+## CRUD button tooltips
+
+You can change the default CRUD button tooltips using the ```SetCrudButtonTooltips``` method of the ```GridClient``` object for this:
+```c#
+    var client = new GridClient<Order>(gridClientService.OrderColumnsWithCrud, query, false, "ordersGrid", ColumnCollections.OrderColumnsWithCustomCrud, locale)
+        .Crud(true, orderService)
+        .SetCrudButtonTooltips("Add Order", "View Order", "Edit Order", "Delete Order");
+```
+
+If any of the passed values is null, then the tooltip text will be the default one. 
+If any of the passed values is empty (""), then there will not be a tooltipfor it. 
 
 ## Custom forms (Optional)
 
@@ -544,5 +595,26 @@ And finaly you have to pass the paramenters initialized before to the ```GridCom
 ```c#
 <GridComponent T="Order" Grid="@_grid" Mode="_mode" Keys="_keys"></GridComponent>
 ``` 
+
+## Init values for Create form
+
+You can configure initial values for new records when using the Create form. 
+
+You have to use the ```SetInitCreateValues``` of the ```GridClient``` object:
+
+```c#
+    var client = new GridClient<Order>(q => orderService.GetOrdersGridRows(columns, q), query, false, "ordersGrid", columns, locale)
+        .Crud(true, orderService)
+        .SetDeleteConfirmation(true);
+```
+
+And the write the funtion to init the values:
+```c#
+    private async Task InitCreateOrder(Order order)
+    {
+        order.Freight = 50;
+        await Task.CompletedTask;
+    }
+```
 
 [<- Passing grid state as parameter](Passing_grid_state_as_parameter.md) | [Nested CRUD ->](Nested_crud.md)

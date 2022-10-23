@@ -1,8 +1,16 @@
-﻿using System;
+﻿using GridShared.Grouping;
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace GridShared
 {
+    public interface IGrid<T> : IGrid
+    {
+        IColumnGroup<T> GetGroup(string columnName);
+        IList<object> GetGroupValues(IColumnGroup<T> group, IEnumerable<object> items);
+    }
+
     /// <summary>
     ///     Grid.Mvc interface
     /// </summary>
@@ -30,14 +38,19 @@ namespace GridShared
         bool EnablePaging { get; set; }
 
         /// <summary>
-        ///     Set or get default value of searching
+        ///     Set or get options for searching
         /// </summary>
-        bool SearchingEnabled { get; set; }
+        SearchOptions SearchOptions { get; set; }
 
         /// <summary>
         ///     Set or get default value of extended sorting
         /// </summary>
         bool ExtSortingEnabled { get; set; }
+
+        /// <summary>
+        ///     Hide extended sorting / grouping header
+        /// </summary>
+        bool HiddenExtSortingHeader { get; set; }
 
         /// <summary>
         ///     Set or get default value of grouping
@@ -48,16 +61,6 @@ namespace GridShared
         ///     Set or get visibility of ClearFiltersButton 
         /// </summary>
         bool ClearFiltersButtonEnabled { get; set; }
-
-        /// <summary>
-        ///     Set or get value of searching for all columns or only text ones
-        /// </summary>
-        bool SearchingOnlyTextColumns { get; set; }
-
-        /// <summary>
-        ///     Set or get value of searching for all columns including hidden ones
-        /// </summary>
-        bool SearchingHiddenColumns { get; set; }
 
         /// <summary>
         ///     Text in empty grid (no items for display)
@@ -115,6 +118,11 @@ namespace GridShared
         string Height { get; set; }
 
         /// <summary>
+        ///     Database function to remove diacritics
+        /// </summary>
+        MethodInfo RemoveDiacritics { get; set; }
+
+        /// <summary>
         ///     Get all css classes mapped to the item
         /// </summary>
         string GetRowCssClasses(object item);
@@ -130,14 +138,11 @@ namespace GridShared
         GridDirection Direction { get; set; }
 
         /// <summary>
-        ///     Get column values to display
-        /// </summary>
-        IList<object> GetValuesToDisplay(string columnName, IEnumerable<object> items);
-
-        /// <summary>
         ///     Grid items to display
         /// </summary>
         IEnumerable<object> GetItemsToDisplay(IList<Tuple<string, object>> values, IEnumerable<object> items);
+
+        int ItemsCount { get; }
 
         //void OnPreRender(); //TODO backward Compatibility
     }

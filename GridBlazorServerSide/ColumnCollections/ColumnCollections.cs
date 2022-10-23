@@ -76,7 +76,7 @@ namespace GridBlazorServerSide.ColumnCollections
         public static Action<IGridColumnCollection<Order>> OrderColumnsWithTotals = c =>
         {
             /* Adding "OrderID" column: */
-            c.Add(o => o.OrderID).Titled(SharedResource.Number).SetWidth(100);
+            c.Add(o => o.OrderID).Titled(SharedResource.Number).SetWidth(100).Sum(true);
 
             /* Adding "OrderDate" column: */
             c.Add(o => o.OrderDate, "OrderCustomDate").Titled(SharedResource.OrderCustomDate)
@@ -94,16 +94,18 @@ namespace GridBlazorServerSide.ColumnCollections
             /* Adding "Freight" column: */
             c.Add(o => o.Freight)
             .Titled(SharedResource.Freight)
-            .Format("{0:F}")
+            .Format("{0:#,##0.000}")
             .SetWidth(150)
-            .Sum(true).Average(true).Max(true).Min(true);
+            .Sum(true).Average(true).Max(true).Min(true)
+            .Calculate("Average 2", x => x.Get("Freight").SumValue.Number / x.Grid.ItemsCount)
+            .Calculate("Average 3", x => x.Get("Freight").SumValue.Number / x.Get("OrderID").SumValue.Number);
 
             /* Adding "Vip customer" column: */
             c.Add(o => o.Customer.IsVip).Titled(SharedResource.IsVip).SetWidth(90).Css("hidden-xs") //hide on phones
             .RenderValueAs(o => o.Customer.IsVip ? Strings.BoolTrueLabel : Strings.BoolFalseLabel);
         };
 
-        public static Action<IGridColumnCollection<Order>> OrderColumnsGroupable = c =>
+        public static Action<IGridColumnCollection<Order>> OrderColumnsExtSorting = c =>
         {
             /* Adding "OrderID" column: */
             c.Add(o => o.OrderID).Titled(SharedResource.Number).SetWidth(100);
@@ -123,6 +125,108 @@ namespace GridBlazorServerSide.ColumnCollections
             /* Adding "ShipVia" column: */
             c.Add(o => o.ShipVia).Titled("Via");
 
+            /* Adding "Freight" column: */
+            c.Add(o => o.Freight)
+            .Titled(SharedResource.Freight)
+            .SetWidth(150)
+            .Format("{0:F}");
+
+            /* Adding "Vip customer" column: */
+            c.Add(o => o.Customer.IsVip).Titled(SharedResource.IsVip).SetWidth(90).Css("hidden-xs") //hide on phones
+            .RenderValueAs(o => o.Customer.IsVip ? Strings.BoolTrueLabel : Strings.BoolFalseLabel);
+        };
+
+        public static Action<IGridColumnCollection<Order>, Func<object, Task<string>>> OrderColumnsGroupable = (c, customerNameLabel) =>
+        {
+            /* Adding "OrderID" column: */
+            c.Add(o => o.OrderID).Titled(SharedResource.Number).SetWidth(100);
+
+            /* Adding "OrderDate" column: */
+            c.Add(o => o.OrderDate, "OrderCustomDate").Titled(SharedResource.OrderCustomDate)
+            .SetWidth(120).RenderComponentAs<TooltipCell>();
+
+            /* Adding "CompanyName" column: */
+            c.Add(o => o.Customer.CompanyName).Titled(SharedResource.CompanyName).SetWidth(250)
+            .ThenSortBy(o => o.ShipVia)
+            .ThenSortByDescending(o => o.Freight)
+            .SetGroupLabel(customerNameLabel);
+
+            /* Adding "ContactName" column: */
+            c.Add(o => o.Customer.ContactName).Titled(SharedResource.ContactName);
+
+            /* Adding "ShipVia" column: */
+            c.Add(o => o.ShipVia).Titled("Via");
+
+            /* Adding "Freight" column: */
+            c.Add(o => o.Freight)
+            .Titled(SharedResource.Freight)
+            .SetWidth(150)
+            .Format("{0:F}");
+
+            /* Adding "Vip customer" column: */
+            c.Add(o => o.Customer.IsVip).Titled(SharedResource.IsVip).SetWidth(90).Css("hidden-xs") //hide on phones
+            .RenderValueAs(o => o.Customer.IsVip ? Strings.BoolTrueLabel : Strings.BoolFalseLabel);
+        };
+
+        public static Action<IGridColumnCollection<Order>> OrderColumnsRearrangeable = c =>
+        {
+            /* Adding "OrderID" column: */
+            c.Add(o => o.OrderID).Titled(SharedResource.Number).SetWidth(100);
+
+            /* Adding "OrderDate" column: */
+            c.Add(o => o.OrderDate, "OrderCustomDate").Titled(SharedResource.OrderCustomDate)
+            .SetWidth(120).RenderComponentAs<TooltipCell>();
+
+            /* Adding "CompanyName" column: */
+            c.Add(o => o.Customer.CompanyName).Titled(SharedResource.CompanyName)
+            .ThenSortBy(o => o.ShipVia)
+            .ThenSortByDescending(o => o.Freight)
+            .SetWidth(250);
+
+            /* Adding "ContactName" column: */
+            c.Add(o => o.Customer.ContactName).Titled(SharedResource.ContactName);
+
+            /* Adding "ShipVia" column: */
+            c.Add(o => o.ShipVia).Titled("Via");
+
+            /* Adding "Freight" column: */
+            c.Add(o => o.Freight)
+            .Titled(SharedResource.Freight)
+            .SetWidth(150)
+            .Format("{0:F}");
+
+            /* Adding "Vip customer" column: */
+            c.Add(o => o.Customer.IsVip).Titled(SharedResource.IsVip).SetWidth(90).Css("hidden-xs") //hide on phones
+            .RenderValueAs(o => o.Customer.IsVip ? Strings.BoolTrueLabel : Strings.BoolFalseLabel);
+        };
+
+        public static Action<IGridColumnCollection<Order>, IEnumerable<SelectItem>, IEnumerable<SelectItem>,
+           IEnumerable<SelectItem>> OrderColumnsListFilter = (c, customerList, contactList, shipviaList) =>
+        {
+            /* Adding "OrderID" column: */
+            c.Add(o => o.OrderID).Titled(SharedResource.Number).SetWidth(100);
+
+            /* Adding "OrderDate" column: */
+            c.Add(o => o.OrderDate, "OrderCustomDate").Titled(SharedResource.OrderCustomDate)
+            .SetWidth(120).RenderComponentAs<TooltipCell>();
+
+            /* Adding "CompanyName" column: */
+            c.Add(o => o.Customer.CompanyName).Titled(SharedResource.CompanyName)
+            .SetWidth(250)
+            .SetListFilter(customerList, o => {
+                o.ShowSelectAllButtons = true;
+                o.ShowSearchInput = true;
+            });
+
+            /* Adding "ContactName" column: */
+            c.Add(o => o.Customer.ContactName).Titled(SharedResource.ContactName)
+            .SetListFilter(contactList);
+            
+            /* Adding "ShipVia" column: */
+            c.Add(o => o.ShipVia).Titled("Via")
+            .RenderValueAs(o => o.Shipper == null ? "" : o.Shipper.CompanyName)
+            .SetListFilter(shipviaList, true, true);
+            
             /* Adding "Freight" column: */
             c.Add(o => o.Freight)
             .Titled(SharedResource.Freight)
@@ -261,7 +365,8 @@ namespace GridBlazorServerSide.ColumnCollections
             c.Add(o => o.Freight)
             .Titled(SharedResource.Freight)
             .SetWidth(150)
-            .Format("{0:#,##0.00}");
+            .Format("{0:#,##0.00}")
+            .SetAutoCompleteTaxonomy(AutoCompleteTerm.Defeat);
 
             /* Adding "Vip customer" column: */
             c.Add(o => o.Customer.IsVip).Titled(SharedResource.IsVip).SetWidth(90).Css("hidden-xs") //hide on phones
@@ -289,7 +394,7 @@ namespace GridBlazorServerSide.ColumnCollections
             c.Add(o => o.ShipRegion, true);
 
             /* Adding hidden "ShipCountry" column: */
-            c.Add(o => o.ShipCountry, true);
+            c.Add(o => o.ShipCountry, true).SetAutoCompleteTaxonomy(AutoCompleteTerm.Country);
 
             /* Adding not mapped column, that renders a component */
             c.Add(true).Titled("Images").RenderCrudComponentAs<Carousel, Carousel, Carousel, NullComponent>();
@@ -367,6 +472,77 @@ namespace GridBlazorServerSide.ColumnCollections
         };
 
         public static Action<IGridColumnCollection<Order>, Func<Order, IEnumerable<SelectItem>>,
+            Func<Order, IEnumerable<SelectItem>>, Func<IEnumerable<SelectItem>>, Func<object[], bool, bool, bool, bool, Task<IGrid>>>
+        OrderColumnsWithCreateGrid = (c, f, g, h, subgrids) =>
+        {
+                    /* Adding "OrderID" column: */
+            c.Add(o => o.OrderID).SetPrimaryKey(true).Titled(SharedResource.Number).SetTooltip("Order ID is ... ").SetWidth(100);
+
+                    /* Adding "CustomerID" column: */
+            c.Add(o => o.CustomerID, true).SetSelectField(true, o => o.Customer.CustomerID + " - " + o.Customer.CompanyName, f);
+
+                    /* Adding "EmployeeID" column: */
+            c.Add(o => o.EmployeeID, true).SetSelectField(true, o => o.Employee.EmployeeID.ToString() + " - " + o.Employee.FirstName + " " + o.Employee.LastName, g);
+
+                    /* Adding "ShipVia" column: */
+            c.Add(o => o.ShipVia, true).SetSelectField(true, o => o.Shipper == null ? "" : o.Shipper.ShipperID.ToString() + " - " + o.Shipper.CompanyName, h);
+
+                    /* Adding "OrderDate" column: */
+            c.Add(o => o.OrderDate, "OrderCustomDate").Titled(SharedResource.OrderCustomDate)
+                    .SetInputType(InputType.Month)
+                    .SetFilterWidgetType("Month")
+                    .Format("{0:yyyy-MM}")
+                    .SetWidth(120);
+
+                    /* Adding "CompanyName" column: */
+            c.Add(o => o.Customer.CompanyName).Titled(SharedResource.CompanyName)
+                    .SetWidth(250).SetCrudHidden(true).SetReadOnlyOnUpdate(true);
+
+                    /* Adding "ContactName" column: */
+            c.Add(o => o.Customer.ContactName).Titled(SharedResource.ContactName).SetCrudHidden(true);
+
+                    /* Adding "Freight" column: */
+            c.Add(o => o.Freight)
+                    .Titled(SharedResource.Freight)
+                    .SetWidth(150)
+                    .Format("{0:F}");
+
+                    /* Adding "Vip customer" column: */
+            c.Add(o => o.Customer.IsVip).Titled(SharedResource.IsVip).SetWidth(90).Css("hidden-xs") //hide on phones
+                    .RenderValueAs(o => o.Customer.IsVip ? Strings.BoolTrueLabel : Strings.BoolFalseLabel).SetCrudHidden(true);
+
+                    /* Adding hidden "RequiredDate" column: */
+            c.Add(o => o.RequiredDate, true).Format("{0:yyyy-MM-dd}");
+
+                    /* Adding hidden "ShippedDate" column: */
+            c.Add(o => o.ShippedDate, true).Format("{0:yyyy-MM-dd}");
+
+                    /* Adding hidden "ShipName" column: */
+            c.Add(o => o.ShipName, true);
+
+                    /* Adding hidden "ShipAddress" column: */
+            c.Add(o => o.ShipAddress, true);
+
+                    /* Adding hidden "ShipCity" column: */
+            c.Add(o => o.ShipCity, true);
+
+                    /* Adding hidden "ShipPostalCode" column: */
+            c.Add(o => o.ShipPostalCode, true);
+
+                    /* Adding hidden "ShipRegion" column: */
+            c.Add(o => o.ShipRegion, true);
+
+                    /* Adding hidden "ShipCountry" column: */
+            c.Add(o => o.ShipCountry, true);
+
+                    /* Adding hidden "OrderDetails" column for a CRUD subgrid: */
+            c.Add(o => o.OrderDetails).Titled("Order Details").SubGrid(true, "tabGroup1", subgrids, ("OrderID", "OrderID"));
+
+                    /* Adding not mapped column, that renders a component in a tab */
+            c.Add(true).Titled("Images").RenderCrudComponentAs<NullComponent, NullComponent, Carousel, Carousel>().SetTabGroup("tabGroup1");
+        };
+
+        public static Action<IGridColumnCollection<Order>, Func<Order, IEnumerable<SelectItem>>,
             Func<Order, IEnumerable<SelectItem>>, Func<IEnumerable<SelectItem>>>
             OrderColumnsWithCustomCrud = (c, f, g, h) =>
         {
@@ -403,6 +579,73 @@ namespace GridBlazorServerSide.ColumnCollections
             c.Add(o => o.Customer.IsVip).Titled(SharedResource.IsVip).SetWidth(90).Css("hidden-xs") //hide on phones
             .RenderValueAs(o => o.Customer.IsVip ? Strings.BoolTrueLabel : Strings.BoolFalseLabel).SetCrudHidden(true);
         };
+
+        public static Action<IGridColumnCollection<Order>, Func<Order, IEnumerable<SelectItem>>,
+            Func<Order, IEnumerable<SelectItem>>, Func<IEnumerable<SelectItem>>, Func<Order, GridMode, Task>>
+            OrderColumnsWithCrudAfterChange = (c, f, g, h, afterChangeCustomerID) =>
+            {
+                /* Adding "OrderID" column: */
+                c.Add(o => o.OrderID).SetPrimaryKey(true).Titled(SharedResource.Number).SetWidth(100);
+
+                /* Adding "CustomerID" column: */
+                c.Add(o => o.CustomerID, true).SetSelectField(true, o => o.Customer.CustomerID + " - " + o.Customer.CompanyName, f).SetAfterChangeValue(afterChangeCustomerID);
+
+                /* Adding "EmployeeID" column: */
+                c.Add(o => o.EmployeeID, true).SetSelectField(true, o => o.Employee.EmployeeID.ToString() + " - " + o.Employee.FirstName + " " + o.Employee.LastName, g);
+
+                /* Adding "ShipVia" column: */
+                c.Add(o => o.ShipVia, true).SetSelectField(true, o => o.Shipper == null ? "" : o.Shipper.ShipperID.ToString() + " - " + o.Shipper.CompanyName, h);
+
+                /* Adding "OrderDate" column: */
+                c.Add(o => o.OrderDate, "OrderCustomDate").Titled(SharedResource.OrderCustomDate)
+                .Format("{0:yyyy-MM-dd}")
+                .SetWidth(120)
+                .SetCrudWidth(3);
+
+                /* Adding "CompanyName" column: */
+                c.Add(o => o.Customer.CompanyName).Titled(SharedResource.CompanyName)
+                .SetWidth(250).SetCrudHidden(true).SetReadOnlyOnUpdate(true);
+
+                /* Adding "ContactName" column: */
+                c.Add(o => o.Customer.ContactName).Titled(SharedResource.ContactName).SetCrudHidden(true);
+
+                /* Adding "Freight" column: */
+                c.Add(o => o.Freight)
+                .Titled(SharedResource.Freight)
+                .SetWidth(150)
+                .Format("{0:#,##0.00}");
+
+                /* Adding "Vip customer" column: */
+                c.Add(o => o.Customer.IsVip).Titled(SharedResource.IsVip).SetWidth(90).Css("hidden-xs") //hide on phones
+                .RenderValueAs(o => o.Customer.IsVip ? Strings.BoolTrueLabel : Strings.BoolFalseLabel).SetCrudHidden(true);
+
+                /* Adding hidden "RequiredDate" column: */
+                c.Add(o => o.RequiredDate, true).Format("{0:yyyy-MM-dd}").SetCrudWidth(3);
+
+                /* Adding hidden "ShippedDate" column: */
+                c.Add(o => o.ShippedDate, true).Format("{0:yyyy-MM-dd}").SetCrudWidth(3);
+
+                /* Adding hidden "ShipName" column: */
+                c.Add(o => o.ShipName, true);
+
+                /* Adding hidden "ShipAddress" column: */
+                c.Add(o => o.ShipAddress, true);
+
+                /* Adding hidden "ShipCity" column: */
+                c.Add(o => o.ShipCity, true);
+
+                /* Adding hidden "ShipPostalCode" column: */
+                c.Add(o => o.ShipPostalCode, true);
+
+                /* Adding hidden "ShipRegion" column: */
+                c.Add(o => o.ShipRegion, true);
+
+                /* Adding hidden "ShipCountry" column: */
+                c.Add(o => o.ShipCountry, true);
+
+                /* Adding not mapped column, that renders a component */
+                c.Add(true).Titled("Images").RenderCrudComponentAs<Carousel, Carousel, Carousel, NullComponent>();
+            };
 
         public static Action<IGridColumnCollection<Order>> OrderColumnsWithSubgrids = c =>
         {
@@ -746,7 +989,7 @@ namespace GridBlazorServerSide.ColumnCollections
             c.Add(o => o.HomePhone, true);
             c.Add(o => o.Extension, true);
             c.Add(o => o.ReportsTo, true);
-            c.Add(o => o.Notes, true).SetInputType(InputType.TextArea);
+            c.Add(o => o.Notes, true).SetTextArea(8);
             c.Add(o => o.PhotoPath, true);
             c.Add(true, "PhotoFile").Titled("Photo").SetInputFileType();
         };

@@ -144,9 +144,21 @@ namespace GridMvc.Html
 
         public IGridHtmlOptions<T> Searchable(bool enable, bool onlyTextColumns, bool hiddenColumns)
         {
-            _source.SearchingEnabled = enable;
-            _source.SearchingOnlyTextColumns = onlyTextColumns;
-            _source.SearchingHiddenColumns = hiddenColumns;
+            return Searchable(o =>
+            {
+                o.Enabled = enable;
+                o.OnlyTextColumns = onlyTextColumns;
+                o.HiddenColumns = hiddenColumns;
+                o.SplittedWords = false;
+            });
+        }
+
+        public IGridHtmlOptions<T> Searchable(Action<SearchOptions> searchOptions)
+        {
+            var options = new SearchOptions();
+            searchOptions?.Invoke(options);
+
+            _source.SearchOptions = options;
             return this;
         }
 
@@ -161,6 +173,13 @@ namespace GridMvc.Html
             return this;
         }
 
+        public IGridHtmlOptions<T> ExtSortable(bool enable, bool hidden)
+        {
+            _source.ExtSortingEnabled = enable;
+            _source.HiddenExtSortingHeader = hidden;
+            return this;
+        }
+
         public IGridHtmlOptions<T> Groupable()
         {
             return Groupable(true);
@@ -170,6 +189,14 @@ namespace GridMvc.Html
         {
             _source.ExtSortingEnabled = enable;
             _source.GroupingEnabled = enable;
+            return this;
+        }
+
+        public IGridHtmlOptions<T> Groupable(bool enable, bool hidden)
+        {
+            _source.ExtSortingEnabled = enable;
+            _source.GroupingEnabled = enable;
+            _source.HiddenExtSortingHeader = hidden;
             return this;
         }
 

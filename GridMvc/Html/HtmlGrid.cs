@@ -1,14 +1,16 @@
 ﻿using GridShared;
+using GridShared.Grouping;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace GridMvc.Html
 {
     /// <summary>
     ///     Grid adapter for html helper
     /// </summary>
-    public class HtmlGrid<T> : GridHtmlOptions<T>, IGrid
+    public class HtmlGrid<T> : GridHtmlOptions<T>, IGrid<T>
     {
         public HtmlGrid(IHtmlHelper helper, SGrid<T> source, string viewName)
             : base(helper, source, viewName)
@@ -25,11 +27,10 @@ namespace GridMvc.Html
             get { return (_source as IGrid).ItemsToDisplay; }
         }
 
-        //int IGrid.ItemsCount
-        //{
-        //    get { return _source.ItemsCount; }
-        //    set { _source.ItemsCount = value; }
-        //}
+        public int ItemsCount
+        {
+            get { return _source.ItemsCount; }
+        }
 
         public int DisplayingItemsCount
         {
@@ -42,26 +43,21 @@ namespace GridMvc.Html
             set { _source.EnablePaging = value; }
         }
 
-        bool IGrid.SearchingEnabled {
-            get { return _source.SearchingEnabled;  }
-            set { _source.SearchingEnabled = value; }
-        }
-
-        public bool SearchingOnlyTextColumns {
-            get { return _source.SearchingOnlyTextColumns; }
-            set { _source.SearchingOnlyTextColumns = value; }
-        }
-
-        public bool SearchingHiddenColumns
-        {
-            get { return _source.SearchingHiddenColumns; }
-            set { _source.SearchingHiddenColumns = value; }
+        SearchOptions IGrid.SearchOptions {
+            get { return _source.SearchOptions;  }
+            set { _source.SearchOptions = value; }
         }
 
         public bool ExtSortingEnabled
         {
             get { return _source.ExtSortingEnabled; }
             set { _source.ExtSortingEnabled = value; }
+        }
+
+        public bool HiddenExtSortingHeader
+        {
+            get { return _source.HiddenExtSortingHeader; }
+            set { _source.HiddenExtSortingHeader = value; }
         }
 
         public bool GroupingEnabled
@@ -142,6 +138,12 @@ namespace GridMvc.Html
             set { _source.Height = value; }
         }
 
+        public MethodInfo RemoveDiacritics
+        {
+            get { return _source.RemoveDiacritics; }
+            set { _source.RemoveDiacritics = value; }
+        }
+
         string IGrid.GetRowCssClasses(object item)
         {
             return _source.GetRowCssClasses(item);
@@ -155,6 +157,16 @@ namespace GridMvc.Html
         public IList<object> GetValuesToDisplay(string columnName, IEnumerable<object> items)
         {
             return _source.GetValuesToDisplay(columnName, items);
+        }
+
+        public IList<object> GetGroupValues(IColumnGroup<T> group, IEnumerable<object> items)
+        {
+            return _source.GetGroupValues(group, items);
+        }
+
+        public IColumnGroup<T> GetGroup(string columnName)
+        {
+            return _source.GetGroup(columnName);
         }
 
         public IEnumerable<object> GetItemsToDisplay(IList<Tuple<string, object>> values, IEnumerable<object> items)

@@ -41,7 +41,29 @@ namespace GridBlazorServerSide.Services
             }
         }
 
-        public ItemsDTO<Customer> GetCustomersGridRows(Action<IGridColumnCollection<Customer>> columns,
+        public IEnumerable<SelectItem> GetAllCustomers2()
+        {
+            using (var context = new NorthwindDbContext(_options))
+            {
+                CustomersRepository repository = new CustomersRepository(context);
+                return repository.GetAll()
+                    .Select(r => new SelectItem(r.CompanyName, r.CompanyName))
+                    .ToList();
+            }
+        }
+
+        public IEnumerable<SelectItem> GetAllContacts()
+        {
+            using (var context = new NorthwindDbContext(_options))
+            {
+                CustomersRepository repository = new CustomersRepository(context);
+                return repository.GetAll()
+                    .Select(r => new SelectItem(r.ContactName, r.ContactName))
+                    .ToList();
+            }
+        }
+
+        public async Task<ItemsDTO<Customer>> GetCustomersGridRowsAsync(Action<IGridColumnCollection<Customer>> columns,
             QueryDictionary<StringValues> query)
         {
             using (var context = new NorthwindDbContext(_options))
@@ -52,10 +74,11 @@ namespace GridBlazorServerSide.Services
                         .WithPaging(10)
                         .Filterable()
                         .WithMultipleFilters()
-                        .Searchable(true, false);
+                        .Searchable(true, false)
+                        .SetRemoveDiacritics<NorthwindDbContext>("RemoveDiacritics");
 
                 // return items to displays
-                var items = server.ItemsToDisplay;
+                var items = await server.GetItemsToDisplayAsync(async x => await x.ToListAsync());
                 return items;
             }
         }
@@ -126,6 +149,9 @@ namespace GridBlazorServerSide.Services
     {
         IEnumerable<string> GetCustomersNames();
         IEnumerable<SelectItem> GetAllCustomers();
-        ItemsDTO<Customer> GetCustomersGridRows(Action<IGridColumnCollection<Customer>> columns, QueryDictionary<StringValues> query);
+        IEnumerable<SelectItem> GetAllCustomers2();
+        IEnumerable<SelectItem> GetAllContacts();
+        Task<ItemsDTO<Customer>> GetCustomersGridRowsAsync(Action<IGridColumnCollection<Customer>> columns,
+            QueryDictionary<StringValues> query);
     }
 }

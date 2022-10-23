@@ -1,4 +1,4 @@
-## Blazor WASM with GridCore back-end
+## Blazor WASM with GridCore back-end (REST API)
 
 # Selecting row
 
@@ -155,4 +155,4 @@ It's also mandatory to identify the columns that are primary keys for the grid. 
 
 ```SetSingleCheckboxColumn``` method has no parameters.
 
-[<- Grouping](Grouping.md) | [Searching ->](Searching.md)
+[<- Rearrange columns](RearrangeColumns.md) | [Searching ->](Searching.md)

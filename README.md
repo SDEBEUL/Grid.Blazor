@@ -3,14 +3,15 @@
 GridBlazor is a Blazor component that shows data in a grid. It requires a back-end component that performs paging, sorting, filtering and others. 
 
 This back-end component can be one of the following:
-- GridCore (v.5.0.0-preview-1 or later), supporting ASP.Net Core 3.1 and ASP.Net 5.0 and ASP.Net 6.0 RC2. GridMvcCore, that it is a fork from https://gridmvc.codeplex.com/, was working for earlier versions. But GridMvcCore is only required for ASP.NET MVC projects now.
+- GridCore (v.5.0.0 or later), supporting ASP.Net Core 3.1 and ASP.Net 5.0 and ASP.Net 6.0. GridMvcCore, that it is a fork from https://gridmvc.codeplex.com/, was working for earlier versions. But GridMvcCore is only required for ASP.NET MVC projects now.
 - an OData back-end. All samples are based on Microsoft.AspNetCore.OData library, but it can be any other OData provider.
 
-It supports .NET Core 3.1 and 5.0 and 6.0-RC2, and Blazor WebAssembly 3.2.0 and 5.0 and 6.0-RC2
+It supports .NET Core 3.1 and 5.0 and 6.0, and Blazor WebAssembly 3.2.0 and 5.0 and 6.0
 
 ## Demo 
 - Blazor server-side: http://gridblazor.azurewebsites.net
-- Blazor WASM with GridCore back-end: http://gridblazorwasm.azurewebsites.net
+- Blazor WASM with GridCore back-end (REST API): http://gridblazorwasm.azurewebsites.net
+- Blazor WASM with GridCore back-end (gRPC): http://gridblazorgrpc.azurewebsites.net
 - Blazor WASM with OData back-end: http://gridblazorodata.azurewebsites.net
 - Blazor WASM with data local in the client: http://gridblazorlocal.azurewebsites.net
 
@@ -18,7 +19,8 @@ It supports .NET Core 3.1 and 5.0 and 6.0-RC2, and Blazor WebAssembly 3.2.0 and 
 There are native C# Grid components for Blazor client-side and server-side, and for ASP.NET Core MVC.
 
 You can find the specific documentation for each environment clicking the following links:
-* [Documentation for Blazor WASM with GridCore back-end](./docs/blazor_client/Documentation.md)
+* [Documentation for Blazor WASM with GridCore back-end (REST API)](./docs/blazor_client/Documentation.md)
+* [Documentation for Blazor WASM with GridCore back-end (gRPC)](./docs/blazor_grpc/Documentation.md)
 * [Documentation for Blazor WASM with OData back-end](./docs/blazor_odata/Documentation.md)
 * [Documentation for Blazor WASM with local data](./docs/blazor_local/Documentation.md)
 * [Documentation for Blazor server-side](./docs/blazor_server/Documentation.md)
@@ -52,7 +54,9 @@ This is an example of a table of items using this component:
 
 ## Notes
 
-- GridBlazor 3.0.0 supports .Net 6.0 RC2
+- GridBlazor 3.4.1 supports the build-in InputFile component for columns of type "file" for .Net 6.0 and later projects. The old Agno.BlazorInputFile component is ussed for .Net Core 3.1 and .Net 5.x projects. See https://github.com/gustavnavar/Grid.Blazor/blob/master/docs/blazor_client/Crud.md#file-type-columns
+
+- GridBlazor 3.0.0 supports .Net 6.0
 
 - GridMvcCore has been split in 2 parts from version 5.0.0 on:
     - GridCore: it includes all code necessary for the back-end Blazor applications (data processing, filtering, sorting, etc.), excluding all MVC dependencies (Razor view and pages rendering).
@@ -130,9 +134,12 @@ https://github.com/gustavnavar/Grid.Blazor/releases
 * [GridMvc](./GridMvc): Library to build the GridMvcCore package
 * [GridCore](./GridCore): Library to build the GridCore package
 * [GridShared](./GridShared): Library to build the GridShared package
-* [GridBlazorClientSide.Client](./GridBlazorClientSide.Client): Front-end project for the Blazor WebAssembly demo
-* [GridBlazorClientSide.Server](./GridBlazorClientSide.Server): Back-end project for the Blazor WebAssembly demo
-* [GridBlazorClientSide.Shared](./GridBlazorClientSide.Shared): Shared project for the Blazor WebAssembly demo
+* [GridBlazorClientSide.Client](./GridBlazorClientSide.Client): Front-end project for the Blazor WebAssembly (REST API) demo
+* [GridBlazorClientSide.Server](./GridBlazorClientSide.Server): Back-end project for the Blazor WebAssembly (REST API) demo
+* [GridBlazorClientSide.Shared](./GridBlazorClientSide.Shared): Shared project for the Blazor WebAssembly (REST API) demo
+* [GridBlazorGrpc.Client](./GridBlazorGrpc.Client): Front-end project for the Blazor WebAssembly (gRPC) demo
+* [GridBlazorGrpc.Server](./GridBlazorGrpc.Server): Back-end project for the Blazor WebAssembly (gRPC) demo
+* [GridBlazorGrpc.Shared](./GridBlazorGrpc.Shared): Shared project for the Blazor WebAssembly (gRPC) demo
 * [GridBlazorOData.Client](./GridBlazorOData.Client): Front-end project for the Blazor WebAssembly with OData server demo
 * [GridBlazorOData.Server](./GridBlazorOData.Server): Back-end project implementing an OData server for the Blazor WebAssembly demo
 * [GridBlazorOData.Shared](./GridBlazorOData.Shared): Shared project for the Blazor WebAssembly with OData server demo

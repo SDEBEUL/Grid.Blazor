@@ -1,5 +1,6 @@
-﻿using GridCore.Columns;
+﻿using GridShared;
 using GridShared.Columns;
+using GridShared.Totals;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
@@ -13,6 +14,7 @@ namespace GridCore.Totals
     internal class TotalsGridItemsProcessor<T> : IGridItemsProcessor<T>
     {
         private readonly ISGrid _grid;
+        private Func<IQueryable<T>, IQueryable<T>> _process;
 
         public TotalsGridItemsProcessor(ISGrid grid)
         {
@@ -23,6 +25,9 @@ namespace GridCore.Totals
 
         public IQueryable<T> Process(IQueryable<T> items)
         {
+            if (_process != null)
+                return _process(items);
+
             ParameterExpression parameter = Expression.Parameter(typeof(T), "x");
 
             foreach (IGridColumn<T> gridColumn in _grid.Columns)
@@ -35,7 +40,7 @@ namespace GridCore.Totals
                     gridColumn.IsMinEnabled = false;
                     continue;
                 }
-
+                 
                 bool isNullable = gridColumn.Totals.IsNullable();
                 Type type = gridColumn.Totals.GetPropertyType(isNullable);
 
@@ -65,23 +70,18 @@ namespace GridCore.Totals
                         var lambdaExpression = Expression.Lambda<Func<T,Nullable<Single>>>(expression, parameter);
                         if (gridColumn.IsSumEnabled)
                         {
-                            ((ISGridColumn)gridColumn).SumValue = (decimal?)items.Sum(lambdaExpression);
-                            gridColumn.SumString = getString(((ISGridColumn)gridColumn).SumValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.SumValue = new Total((decimal?)items.Sum(lambdaExpression));
                         }
                         if (gridColumn.IsAverageEnabled)
                         {
-                            ((ISGridColumn)gridColumn).AverageValue = (decimal?)items.Average(lambdaExpression);
-                            gridColumn.AverageString = getString(((ISGridColumn)gridColumn).AverageValue, ((ISGridColumn)gridColumn).ValuePattern);
-                        }
+                            gridColumn.AverageValue = new Total((decimal?)items.Average(lambdaExpression));                        }
                         if (gridColumn.IsMaxEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MaxValue = items.Max(lambdaExpression);
-                            gridColumn.MaxString = getString(((ISGridColumn)gridColumn).MaxValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MaxValue = new Total((decimal?)items.Max(lambdaExpression));
                         }
                         if (gridColumn.IsMinEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MinValue = items.Min(lambdaExpression);
-                            gridColumn.MinString = getString(((ISGridColumn)gridColumn).MinValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MinValue = new Total((decimal?)items.Min(lambdaExpression));
                         }
                     }
                     else if (type == typeof(Int32))
@@ -89,23 +89,19 @@ namespace GridCore.Totals
                         var lambdaExpression = Expression.Lambda<Func<T, Nullable<Int32>>>(expression, parameter);
                         if (gridColumn.IsSumEnabled)
                         {
-                            ((ISGridColumn)gridColumn).SumValue = (decimal?)items.Sum(lambdaExpression);
-                            gridColumn.SumString = getString(((ISGridColumn)gridColumn).SumValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.SumValue = new Total((decimal?)items.Sum(lambdaExpression));
                         }
                         if (gridColumn.IsAverageEnabled)
                         {
-                            ((ISGridColumn)gridColumn).AverageValue = (decimal?)items.Average(lambdaExpression);
-                            gridColumn.AverageString = getString(((ISGridColumn)gridColumn).AverageValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.AverageValue = new Total((decimal?)items.Average(lambdaExpression));
                         }
                         if (gridColumn.IsMaxEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MaxValue = items.Max(lambdaExpression);
-                            gridColumn.MaxString = getString(((ISGridColumn)gridColumn).MaxValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MaxValue = new Total((decimal?)items.Max(lambdaExpression));
                         }
                         if (gridColumn.IsMinEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MinValue = items.Min(lambdaExpression);
-                            gridColumn.MinString = getString(((ISGridColumn)gridColumn).MinValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MinValue = new Total((decimal?)items.Min(lambdaExpression));
                         }
                     }
                     else if (type == typeof(Int64))
@@ -113,23 +109,19 @@ namespace GridCore.Totals
                         var lambdaExpression = Expression.Lambda<Func<T, Nullable<Int64>>>(expression, parameter);
                         if (gridColumn.IsSumEnabled)
                         {
-                            ((ISGridColumn)gridColumn).SumValue = (decimal?)items.Sum(lambdaExpression);
-                            gridColumn.SumString = getString(((ISGridColumn)gridColumn).SumValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.SumValue = new Total((decimal?)items.Sum(lambdaExpression));
                         }
                         if (gridColumn.IsAverageEnabled)
                         {
-                            ((ISGridColumn)gridColumn).AverageValue = (decimal?)items.Average(lambdaExpression);
-                            gridColumn.AverageString = getString(((ISGridColumn)gridColumn).AverageValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.AverageValue = new Total((decimal?)items.Average(lambdaExpression));
                         }
                         if (gridColumn.IsMaxEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MaxValue = items.Max(lambdaExpression);
-                            gridColumn.MaxString = getString(((ISGridColumn)gridColumn).MaxValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MaxValue = new Total((decimal?)items.Max(lambdaExpression));
                         }
                         if (gridColumn.IsMinEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MinValue = items.Min(lambdaExpression);
-                            gridColumn.MinString = getString(((ISGridColumn)gridColumn).MinValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MinValue = new Total((decimal?)items.Min(lambdaExpression));
                         }
                     }
                     else if (type == typeof(Double))
@@ -137,23 +129,19 @@ namespace GridCore.Totals
                         var lambdaExpression = Expression.Lambda<Func<T, Nullable<Double>>>(expression, parameter);
                         if (gridColumn.IsSumEnabled)
                         {
-                            ((ISGridColumn)gridColumn).SumValue = (decimal?)items.Sum(lambdaExpression);
-                            gridColumn.SumString = getString(((ISGridColumn)gridColumn).SumValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.SumValue = new Total((decimal?)items.Sum(lambdaExpression));
                         }
                         if (gridColumn.IsAverageEnabled)
                         {
-                            ((ISGridColumn)gridColumn).AverageValue = (decimal?)items.Average(lambdaExpression);
-                            gridColumn.AverageString = getString(((ISGridColumn)gridColumn).AverageValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.AverageValue = new Total((decimal?)items.Average(lambdaExpression));
                         }
                         if (gridColumn.IsMaxEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MaxValue = items.Max(lambdaExpression);
-                            gridColumn.MaxString = getString(((ISGridColumn)gridColumn).MaxValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MaxValue = new Total((decimal?)items.Max(lambdaExpression));
                         }
                         if (gridColumn.IsMinEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MinValue = items.Min(lambdaExpression);
-                            gridColumn.MinString = getString(((ISGridColumn)gridColumn).MinValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MinValue = new Total((decimal?)items.Min(lambdaExpression));
                         }
                     }
                     else if (type == typeof(Decimal))
@@ -161,23 +149,19 @@ namespace GridCore.Totals
                         var lambdaExpression = Expression.Lambda<Func<T, Nullable<Decimal>>>(expression, parameter);
                         if (gridColumn.IsSumEnabled)
                         {
-                            ((ISGridColumn)gridColumn).SumValue = (decimal?)items.Sum(lambdaExpression);
-                            gridColumn.SumString = getString(((ISGridColumn)gridColumn).SumValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.SumValue = new Total((decimal?)items.Sum(lambdaExpression));
                         }
                         if (gridColumn.IsAverageEnabled)
                         {
-                            ((ISGridColumn)gridColumn).AverageValue = (decimal?)items.Average(lambdaExpression);
-                            gridColumn.AverageString = getString(((ISGridColumn)gridColumn).AverageValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.AverageValue = new Total((decimal?)items.Average(lambdaExpression));
                         }
                         if (gridColumn.IsMaxEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MaxValue = items.Max(lambdaExpression);
-                            gridColumn.MaxString = getString(((ISGridColumn)gridColumn).MaxValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MaxValue = new Total((decimal?)items.Max(lambdaExpression));
                         }
                         if (gridColumn.IsMinEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MinValue = items.Min(lambdaExpression);
-                            gridColumn.MinString = getString(((ISGridColumn)gridColumn).MinValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MinValue = new Total((decimal?)items.Min(lambdaExpression));
                         }
                     }
                     else if (type == typeof(DateTime))
@@ -188,13 +172,11 @@ namespace GridCore.Totals
                         var lambdaExpression = Expression.Lambda<Func<T, Nullable<DateTime>>>(expression, parameter);
                         if (gridColumn.IsMaxEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MaxValue = items.Max(lambdaExpression);
-                            gridColumn.MaxString = getString(((ISGridColumn)gridColumn).MaxValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MaxValue = new Total(items.Max(lambdaExpression));
                         }
                         if (gridColumn.IsMinEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MinValue = items.Min(lambdaExpression);
-                            gridColumn.MinString = getString(((ISGridColumn)gridColumn).MinValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MinValue = new Total(items.Min(lambdaExpression));
                         }
                     }
                     else if (type == typeof(string))
@@ -205,13 +187,11 @@ namespace GridCore.Totals
                         var lambdaExpression = Expression.Lambda<Func<T, string>>(expression, parameter);
                         if (gridColumn.IsMaxEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MaxValue = items.Max(lambdaExpression);
-                            gridColumn.MaxString = getString(((ISGridColumn)gridColumn).MaxValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MaxValue = new Total(items.Max(lambdaExpression));
                         }
                         if (gridColumn.IsMinEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MinValue = items.Min(lambdaExpression);
-                            gridColumn.MinString = getString(((ISGridColumn)gridColumn).MinValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MinValue = new Total(items.Min(lambdaExpression));
                         }
                     }
                     else
@@ -229,23 +209,19 @@ namespace GridCore.Totals
                         var lambdaExpression = Expression.Lambda<Func<T, Single>>(expression, parameter);
                         if (gridColumn.IsSumEnabled)
                         {
-                            ((ISGridColumn)gridColumn).SumValue = (decimal?)items.Sum(lambdaExpression);
-                            gridColumn.SumString = getString(((ISGridColumn)gridColumn).SumValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.SumValue = new Total((decimal?)items.Sum(lambdaExpression));
                         }
                         if (gridColumn.IsAverageEnabled)
                         {
-                            ((ISGridColumn)gridColumn).AverageValue = (decimal?)items.Average(lambdaExpression);
-                            gridColumn.AverageString = getString(((ISGridColumn)gridColumn).AverageValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.AverageValue = new Total((decimal?)items.Average(lambdaExpression));
                         }
                         if (gridColumn.IsMaxEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MaxValue = items.Max(lambdaExpression);
-                            gridColumn.MaxString = getString(((ISGridColumn)gridColumn).MaxValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MaxValue = new Total((decimal?)items.Max(lambdaExpression));
                         }
                         if (gridColumn.IsMinEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MinValue = items.Min(lambdaExpression);
-                            gridColumn.MinString = getString(((ISGridColumn)gridColumn).MinValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MinValue = new Total((decimal?)items.Min(lambdaExpression));
                         }
                     }
                     else if (type == typeof(Int32))
@@ -253,23 +229,19 @@ namespace GridCore.Totals
                         var lambdaExpression = Expression.Lambda<Func<T, Int32>>(expression, parameter);
                         if (gridColumn.IsSumEnabled)
                         {
-                            ((ISGridColumn)gridColumn).SumValue = (decimal?)items.Sum(lambdaExpression);
-                            gridColumn.SumString = getString(((ISGridColumn)gridColumn).SumValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.SumValue = new Total((decimal?)items.Sum(lambdaExpression));
                         }
                         if (gridColumn.IsAverageEnabled)
                         {
-                            ((ISGridColumn)gridColumn).AverageValue = (decimal?)items.Average(lambdaExpression);
-                            gridColumn.AverageString = getString(((ISGridColumn)gridColumn).AverageValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.AverageValue = new Total((decimal?)items.Average(lambdaExpression));
                         }
                         if (gridColumn.IsMaxEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MaxValue = items.Max(lambdaExpression);
-                            gridColumn.MaxString = getString(((ISGridColumn)gridColumn).MaxValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MaxValue = new Total((decimal?)items.Max(lambdaExpression));
                         }
                         if (gridColumn.IsMinEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MinValue = items.Min(lambdaExpression);
-                            gridColumn.MinString = getString(((ISGridColumn)gridColumn).MinValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MinValue = new Total((decimal?)items.Min(lambdaExpression));
                         }
                     }
                     else if (type == typeof(Int64))
@@ -277,23 +249,19 @@ namespace GridCore.Totals
                         var lambdaExpression = Expression.Lambda<Func<T, Int64>>(expression, parameter);
                         if (gridColumn.IsSumEnabled)
                         {
-                            ((ISGridColumn)gridColumn).SumValue = (decimal?)items.Sum(lambdaExpression);
-                            gridColumn.SumString = getString(((ISGridColumn)gridColumn).SumValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.SumValue = new Total((decimal?)items.Sum(lambdaExpression));
                         }
                         if (gridColumn.IsAverageEnabled)
                         {
-                            ((ISGridColumn)gridColumn).AverageValue = (decimal?)items.Average(lambdaExpression);
-                            gridColumn.AverageString = getString(((ISGridColumn)gridColumn).AverageValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.AverageValue = new Total((decimal?)items.Average(lambdaExpression));
                         }
                         if (gridColumn.IsMaxEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MaxValue = items.Max(lambdaExpression);
-                            gridColumn.MaxString = getString(((ISGridColumn)gridColumn).MaxValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MaxValue = new Total((decimal?)items.Max(lambdaExpression));
                         }
                         if (gridColumn.IsMinEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MinValue = items.Min(lambdaExpression);
-                            gridColumn.MinString = getString(((ISGridColumn)gridColumn).MinValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MinValue = new Total((decimal?)items.Min(lambdaExpression));
                         }
                     }
                     else if (type == typeof(Double))
@@ -301,23 +269,19 @@ namespace GridCore.Totals
                         var lambdaExpression = Expression.Lambda<Func<T, Double>>(expression, parameter);
                         if (gridColumn.IsSumEnabled)
                         {
-                            ((ISGridColumn)gridColumn).SumValue = (decimal?)items.Sum(lambdaExpression);
-                            gridColumn.SumString = getString(((ISGridColumn)gridColumn).SumValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.SumValue = new Total((decimal?)items.Sum(lambdaExpression));
                         }
                         if (gridColumn.IsAverageEnabled)
                         {
-                            ((ISGridColumn)gridColumn).AverageValue = (decimal?)items.Average(lambdaExpression);
-                            gridColumn.AverageString = getString(((ISGridColumn)gridColumn).AverageValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.AverageValue = new Total((decimal?)items.Average(lambdaExpression));
                         }
                         if (gridColumn.IsMaxEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MaxValue = items.Max(lambdaExpression);
-                            gridColumn.MaxString = getString(((ISGridColumn)gridColumn).MaxValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MaxValue = new Total((decimal?)items.Max(lambdaExpression));
                         }
                         if (gridColumn.IsMinEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MinValue = items.Min(lambdaExpression);
-                            gridColumn.MinString = getString(((ISGridColumn)gridColumn).MinValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MinValue = new Total((decimal?)items.Min(lambdaExpression));
                         }
                     }
                     else if (type == typeof(Decimal))
@@ -325,23 +289,19 @@ namespace GridCore.Totals
                         var lambdaExpression = Expression.Lambda<Func<T, Decimal>>(expression, parameter);
                         if (gridColumn.IsSumEnabled)
                         {
-                            ((ISGridColumn)gridColumn).SumValue = (decimal?)items.Sum(lambdaExpression);
-                            gridColumn.SumString = getString(((ISGridColumn)gridColumn).SumValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.SumValue = new Total((decimal?)items.Sum(lambdaExpression));
                         }
                         if (gridColumn.IsAverageEnabled)
                         {
-                            ((ISGridColumn)gridColumn).AverageValue = (decimal?)items.Average(lambdaExpression);
-                            gridColumn.AverageString = getString(((ISGridColumn)gridColumn).AverageValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.AverageValue = new Total((decimal?)items.Average(lambdaExpression));
                         }
                         if (gridColumn.IsMaxEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MaxValue = items.Max(lambdaExpression);
-                            gridColumn.MaxString = getString(((ISGridColumn)gridColumn).MaxValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MaxValue = new Total((decimal?)items.Max(lambdaExpression));
                         }
                         if (gridColumn.IsMinEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MinValue = items.Min(lambdaExpression);
-                            gridColumn.MinString = getString(((ISGridColumn)gridColumn).MinValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MinValue = new Total((decimal?)items.Min(lambdaExpression));
                         }
                     }
                     else if (type == typeof(DateTime))
@@ -352,13 +312,11 @@ namespace GridCore.Totals
                         var lambdaExpression = Expression.Lambda<Func<T, DateTime>>(expression, parameter);
                         if (gridColumn.IsMaxEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MaxValue = items.Max(lambdaExpression);
-                            gridColumn.MaxString = getString(((ISGridColumn)gridColumn).MaxValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MaxValue = new Total(items.Max(lambdaExpression));
                         }
                         if (gridColumn.IsMinEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MinValue = items.Min(lambdaExpression);
-                            gridColumn.MinString = getString(((ISGridColumn)gridColumn).MinValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MinValue = new Total(items.Min(lambdaExpression));
                         }
                     }
                     else if (type == typeof(string))
@@ -369,13 +327,11 @@ namespace GridCore.Totals
                         var lambdaExpression = Expression.Lambda<Func<T, string>>(expression, parameter);
                         if (gridColumn.IsMaxEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MaxValue = items.Max(lambdaExpression);
-                            gridColumn.MaxString = getString(((ISGridColumn)gridColumn).MaxValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MaxValue = new Total(items.Max(lambdaExpression));
                         }
                         if (gridColumn.IsMinEnabled)
                         {
-                            ((ISGridColumn)gridColumn).MinValue = items.Min(lambdaExpression);
-                            gridColumn.MinString = getString(((ISGridColumn)gridColumn).MinValue, ((ISGridColumn)gridColumn).ValuePattern);
+                            gridColumn.MinValue = new Total(items.Min(lambdaExpression));
                         }
                     }
                     else
@@ -388,26 +344,37 @@ namespace GridCore.Totals
                 }
             }
 
+
+            foreach (IGridColumn<T> gridColumn in _grid.Columns.Where(r => ((IGridColumn<T>)r).Calculations.Any()))
+            {
+                foreach (var calculation in gridColumn.Calculations)
+                {
+                    var value = calculation.Value((IGridColumnCollection<T>)_grid.Columns);
+                    Type type = value.GetType();
+
+                    if (type == typeof(Single) || type == typeof(Int32) || type == typeof(Int64) || type == typeof(Double) || type == typeof(Decimal))
+                    {
+                        gridColumn.CalculationValues.AddParameter(calculation.Key, new Total((decimal?)value));
+                    }
+                    else if (type == typeof(DateTime))
+                    {
+                        gridColumn.CalculationValues.AddParameter(calculation.Key, new Total((DateTime)value));
+                    }
+                    else if (type == typeof(string))
+                    {
+                        gridColumn.CalculationValues.AddParameter(calculation.Key, new Total((string)value));
+                    }
+                }
+            }
+            
             return items;         
         }
 
-        #endregion
-
-        private string getString(object value, string valuePattern)
+        public void SetProcess(Func<IQueryable<T>, IQueryable<T>> process)
         {
-            if (value == null)
-                return null;
-            try
-            {
-                if (!string.IsNullOrEmpty(valuePattern))
-                    return string.Format(valuePattern, value);
-                else
-                    return value.ToString();
-            }
-            catch (Exception)
-            {
-                return value.ToString();
-            }
+            _process = process;
         }
+
+        #endregion
     }
 }

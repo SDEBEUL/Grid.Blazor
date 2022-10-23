@@ -100,11 +100,11 @@
                                     <div class="grid-crud">
                                         @if (string.IsNullOrWhiteSpace(Grid.CreateLabel))
                                         {
-                                            <button class="grid-button grid-button-add btn btn-sm btn-primary" type="button" title="@Strings.CreateItem" @onclick="CreateHandler" @onclick:stopPropagation></button>
+                                            <button class="grid-button grid-button-add btn btn-sm btn-primary" type="button" title="@Grid.CreateTooltip" @onclick="CreateHandler" @onclick:stopPropagation></button>
                                         }
                                         else
                                         {
-                                            <button class="grid-button-label-add btn btn-sm btn-primary" type="button" title="@Strings.CreateItem" @onclick="CreateHandler" @onclick:stopPropagation>@Grid.CreateLabel</button>
+                                            <button class="grid-button-label-add btn btn-sm btn-primary" type="button" title="@Grid.CreateTooltip" @onclick="CreateHandler" @onclick:stopPropagation>@Grid.CreateLabel</button>
                                         }
                                     </div>
                                 }
@@ -113,11 +113,11 @@
                                     <div class="grid-crud">
                                         @if (string.IsNullOrWhiteSpace(Grid.ReadLabel))
                                         {
-                                            <button class='grid-button grid-button-header-view btn btn-sm btn-primary' title="@Strings.ReadItem" @onclick="@(e => ReadSelectedHandler())" type="button" @onclick:stopPropagation></button>
+                                            <button class='grid-button grid-button-header-view btn btn-sm btn-primary' title="@Grid.ReadTooltip" @onclick="@(e => ReadSelectedHandler())" type="button" @onclick:stopPropagation></button>
                                         }
                                         else
                                         {
-                                            <button class='grid-button-header-label-view btn btn-sm btn-primary' title="@Strings.ReadItem" @onclick="@(e => ReadSelectedHandler())" type="button" @onclick:stopPropagation>@Grid.ReadLabel</button>
+                                            <button class='grid-button-header-label-view btn btn-sm btn-primary' title="@Grid.ReadTooltip" @onclick="@(e => ReadSelectedHandler())" type="button" @onclick:stopPropagation>@Grid.ReadLabel</button>
                                         }
                                     </div>
                                 }
@@ -126,11 +126,11 @@
                                     <div class="grid-crud">
                                         @if (string.IsNullOrWhiteSpace(Grid.UpdateLabel))
                                         {
-                                            <button class='grid-button grid-button-header-edit btn btn-sm btn-primary' title="@Strings.UpdateItem" @onclick="@(e => UpdateSelectedHandler())" type="button" @onclick:stopPropagation></button>
+                                            <button class='grid-button grid-button-header-edit btn btn-sm btn-primary' title="@Grid.UpdateTooltip" @onclick="@(e => UpdateSelectedHandler())" type="button" @onclick:stopPropagation></button>
                                         }
                                         else
                                         {
-                                            <button class='grid-button-header-label-edit btn btn-sm btn-primary' title="@Strings.UpdateItem" @onclick="@(e => UpdateSelectedHandler())" type="button" @onclick:stopPropagation>@Grid.UpdateLabel</button>
+                                            <button class='grid-button-header-label-edit btn btn-sm btn-primary' title="@Grid.UpdateTooltip" @onclick="@(e => UpdateSelectedHandler())" type="button" @onclick:stopPropagation>@Grid.UpdateLabel</button>
                                         }
                                     </div>
                                 }
@@ -139,11 +139,11 @@
                                     <div class="grid-crud">
                                         @if (string.IsNullOrWhiteSpace(Grid.DeleteLabel))
                                         {
-                                            <button class='grid-button grid-button-header-delete btn btn-sm btn-primary' title="@Strings.DeleteItem" @onclick="@(e => DeleteSelectedHandler())" type="button" @onclick:stopPropagation></button>
+                                            <button class='grid-button grid-button-header-delete btn btn-sm btn-primary' title="@Grid.DeleteTooltip" @onclick="@(e => DeleteSelectedHandler())" type="button" @onclick:stopPropagation></button>
                                         }
                                         else
                                         {
-                                            <button class='grid-button-header-label-delete btn btn-sm btn-primary' title="@Strings.DeleteItem" @onclick="@(e => DeleteSelectedHandler())" type="button" @onclick:stopPropagation>@Grid.DeleteLabel</button>
+                                            <button class='grid-button-header-label-delete btn btn-sm btn-primary' title="@Grid.DeleteTooltip" @onclick="@(e => DeleteSelectedHandler())" type="button" @onclick:stopPropagation>@Grid.DeleteLabel</button>
                                         }
                                     </div>
                                 }
@@ -169,18 +169,8 @@
                                         }
                                     </div>
                                 }
-                                @if (Grid.EnablePaging && Grid.Pager.ChangePageSize)
-                                {
-                                    <div class="grid-change-page-size form-group" data-change-page-size-url="@_changePageSizeUrl">
-                                        <label class="control-label"><b>@Strings.Show</b></label>
-                                        <div>
-                                            <input @ref="PageSizeInput" class="form-control grid-change-page-size-input" @bind="_pageSize" @onkeyup="InputPageSizeKeyup" @onblur="InputPageSizeBlur" @onclick:stopPropagation />
-                                        </div>
-                                        <label class="control-label"><b>@Strings.Items</b></label>
-                                    </div>
-                                }
                             </div>
-                            @if (Grid.SearchingEnabled)
+                            @if (Grid.SearchOptions.Enabled)
                             {
                                 <CascadingValue Value=@this Name="GridComponent">
                                     <GridSearchComponent @ref="SearchComponent" T="@T" Grid="@Grid"></GridSearchComponent>
@@ -414,7 +404,7 @@
                 @if (Grid.CreateComponent == null)
                 {
                     <CascadingValue Value=@this Name="GridComponent">
-                        <GridCreateComponent @ref="CreateComponent" T="@T" Item="@_item"></GridCreateComponent>
+                        <GridCreateComponent @ref="CreateComponent" T="@T" Item="@Item"></GridCreateComponent>
                     </CascadingValue>
                 }
                 else
@@ -423,13 +413,13 @@
                 }
             </div>
         }
-        else if (Grid.Mode == GridMode.Read && (Grid.ReadEnabled || (((CGrid<T>)Grid).FuncReadEnabled != null && ((CGrid<T>)Grid).FuncReadEnabled(_item))))
+        else if (Grid.Mode == GridMode.Read && (Grid.ReadEnabled || (((CGrid<T>)Grid).FuncReadEnabled != null && ((CGrid<T>)Grid).FuncReadEnabled(Item))))
         {
             <div dir="@Grid.Direction.ToDirection()">
                 @if (Grid.ReadComponent == null)
                 {
                     <CascadingValue Value=@this Name="GridComponent">
-                        <GridReadComponent @ref="ReadComponent" T="@T" Item="@_item"></GridReadComponent>
+                        <GridReadComponent @ref="ReadComponent" T="@T" Item="@Item"></GridReadComponent>
                     </CascadingValue>
                 }
                 else
@@ -438,13 +428,13 @@
                 }
             </div>
         }
-        else if (Grid.Mode == GridMode.Update && (Grid.UpdateEnabled || (((CGrid<T>)Grid).FuncUpdateEnabled != null && ((CGrid<T>)Grid).FuncUpdateEnabled(_item))))
+        else if (Grid.Mode == GridMode.Update && (Grid.UpdateEnabled || (((CGrid<T>)Grid).FuncUpdateEnabled != null && ((CGrid<T>)Grid).FuncUpdateEnabled(Item))))
         {
             <div dir="@Grid.Direction.ToDirection()">
                 @if (Grid.UpdateComponent == null)
                 {
                     <CascadingValue Value=@this Name="GridComponent">
-                        <GridUpdateComponent @ref="UpdateComponent" T="@T" Item="@_item"></GridUpdateComponent>
+                        <GridUpdateComponent @ref="UpdateComponent" T="@T" Item="@Item"></GridUpdateComponent>
                     </CascadingValue>
                 }
                 else
@@ -453,13 +443,13 @@
                 }
             </div>
         }
-        else if (Grid.Mode == GridMode.Delete && (Grid.DeleteEnabled || (((CGrid<T>)Grid).FuncDeleteEnabled != null && ((CGrid<T>)Grid).FuncDeleteEnabled(_item))))
+        else if (Grid.Mode == GridMode.Delete && (Grid.DeleteEnabled || (((CGrid<T>)Grid).FuncDeleteEnabled != null && ((CGrid<T>)Grid).FuncDeleteEnabled(Item))))
         {
             <div dir="@Grid.Direction.ToDirection()">
                 @if (Grid.DeleteComponent == null)
                 {
                     <CascadingValue Value=@this Name="GridComponent">
-                        <GridDeleteComponent @ref="DeleteComponent" T="@T" Item="@_item"></GridDeleteComponent>
+                        <GridDeleteComponent @ref="DeleteComponent" T="@T" Item="@Item"></GridDeleteComponent>
                     </CascadingValue>
                 }
                 else

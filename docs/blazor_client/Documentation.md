@@ -1,4 +1,4 @@
-# Blazor WASM with GridCore back-end
+# Blazor WASM with GridCore back-end (REST API)
 
 [Back](../../README.md)
 
@@ -15,6 +15,7 @@
 * [Totals](Totals.md)
 * [Sorting](Sorting.md)
 * [Grouping](Grouping.md)
+* [Rearrange columns](RearrangeColumns.md)
 * [Selecting row](Selecting_row.md)
 * [Searching](Searching.md)
 * [Filtering](Filtering.md)

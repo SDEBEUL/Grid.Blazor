@@ -1,10 +1,13 @@
-﻿using Agno.BlazorInputFile;
+﻿#if NETSTANDARD2_1 || NET5_0
+using Agno.BlazorInputFile;
+#endif
 using GridBlazor.Columns;
 using GridBlazor.Resources;
 using GridShared;
 using GridShared.Columns;
 using GridShared.Utility;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.CompilerServices;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using System;
@@ -19,7 +22,6 @@ namespace GridBlazor.Pages
 {
     public partial class GridUpdateComponent<T> : ICustomGridComponent<T>
     {
-        private int _sequence = 0;
         private bool _shouldRender = false;
         private QueryDictionary<RenderFragment> _renderFragments;
         private IEnumerable<string> _tabGroups;
@@ -34,7 +36,12 @@ namespace GridBlazor.Pages
         public QueryDictionary<VariableReference> Children { get; private set; } = new QueryDictionary<VariableReference>();
 
         public QueryDictionary<VariableReference> InputFiles { get; private set; } = new QueryDictionary<VariableReference>();
+
+#if NETSTANDARD2_1 || NET5_0
         public QueryDictionary<IFileListEntry[]> Files { get; private set; } = new QueryDictionary<IFileListEntry[]>();
+#else
+        public QueryDictionary<IBrowserFile[]> Files { get; private set; } = new QueryDictionary<IBrowserFile[]>();
+#endif
 
         public QueryDictionary<IEnumerable<SelectItem>> SelectItems { get; private set; } = new QueryDictionary<IEnumerable<SelectItem>>();
 
@@ -52,6 +59,9 @@ namespace GridBlazor.Pages
         protected override async Task OnParametersSetAsync()
         {
             _renderFragments = new QueryDictionary<RenderFragment>();
+            Children = new QueryDictionary<VariableReference>();
+            SelectItems = new QueryDictionary<IEnumerable<SelectItem>>();
+
             foreach (var column in GridComponent.Grid.Columns)
             {
                 // Name must have a non empty value
@@ -65,28 +75,30 @@ namespace GridBlazor.Pages
                     grid.Direction = GridComponent.Grid.Direction;
                     grid.FixedValues = values;
                     VariableReference reference = new VariableReference();
-                    if(Children.ContainsKey(column.Name))
-                        Children[column.Name] = reference;
-                    else
-                        Children.Add(column.Name, reference);
-                    if (_renderFragments.ContainsKey(column.Name))
-                        _renderFragments[column.Name] = CreateSubGridComponent(grid, reference);
-                    else
-                        _renderFragments.Add(column.Name, CreateSubGridComponent(grid, reference));
+                    Children.AddParameter(column.Name, reference);
+                    _renderFragments.AddParameter(column.Name, CreateSubGridComponent(grid, reference));
                 }
                 else if (column.UpdateComponentType != null)
                 {
                     VariableReference reference = new VariableReference();
-                    if (Children.ContainsKey(column.Name))
-                        Children[column.Name] = reference;
+                    Children.AddParameter(column.Name, reference);
+                    _renderFragments.AddParameter(column.Name, GridCellComponent<T>.CreateComponent(GridComponent, 
+                        column.UpdateComponentType, column, Item, null, true, reference));
+                }
+                else if (!((IGridColumn<T>)column).IsSelectField.IsSelectKey && !((IGridColumn<T>)column).IsSelectColumn.IsSelectKey
+                    && !((IGridColumn<T>)column).ReadOnlyOnUpdate(Item) && ((IGridColumn<T>)column).InputType == InputType.File)
+                {
+                    VariableReference reference;
+                    if (InputFiles.ContainsKey(column.FieldName))
+                    {
+                        reference = InputFiles[column.FieldName];
+                    }
                     else
-                        Children.Add(column.Name, reference);
-                    if (_renderFragments.ContainsKey(column.Name))
-                        _renderFragments[column.Name] = GridCellComponent<T>.CreateComponent(_sequence,
-                            GridComponent, column.UpdateComponentType, column, Item, null, true, reference);
-                    else
-                        _renderFragments.Add(column.Name, GridCellComponent<T>.CreateComponent(_sequence,
-                            GridComponent, column.UpdateComponentType, column, Item, null, true, reference));
+                    {
+                        reference = new VariableReference();
+                        InputFiles.Add(column.FieldName, reference);
+                    }
+                    _renderFragments.AddParameter(column.Name, CreateInputFileComponent((IGridColumn<T>)column, reference));
                 }
             }
             _tabGroups = GridComponent.Grid.Columns
@@ -102,11 +114,11 @@ namespace GridBlazor.Pages
                         (buttonCrudComponent.UpdateModeAsync != null && await buttonCrudComponent.UpdateModeAsync(Item)) ||
                         (buttonCrudComponent.GridMode.HasFlag(GridMode.Update)))
                     {
-                        _buttonCrudComponentVisibility.Add(key, true);
+                        _buttonCrudComponentVisibility.AddParameter(key, true);
                     }
                     else
                     {
-                        _buttonCrudComponentVisibility.Add(key, false);
+                        _buttonCrudComponentVisibility.AddParameter(key, false);
                     }
                 }
             }
@@ -126,9 +138,32 @@ namespace GridBlazor.Pages
         private RenderFragment CreateSubGridComponent(ICGrid grid, VariableReference reference) => builder =>
         {
             Type gridComponentType = typeof(GridComponent<>).MakeGenericType(grid.Type);
-            builder.OpenComponent(++_sequence, gridComponentType);
-            builder.AddAttribute(++_sequence, "Grid", grid);
-            builder.AddComponentReferenceCapture(++_sequence, r => reference.Variable = r);
+            builder.OpenComponent(0, gridComponentType);
+            builder.AddAttribute(1, "Grid", grid);
+            builder.AddComponentReferenceCapture(2, r => reference.Variable = r);
+            builder.CloseComponent();
+        };
+
+        private RenderFragment CreateInputFileComponent(IGridColumn<T> column, VariableReference reference) => builder =>
+        {
+            Type gridComponentType;
+#if NETSTANDARD2_1 || NET5_0
+            gridComponentType = typeof(AgnoInputFile);
+#else
+            gridComponentType = typeof(InputFile);
+#endif
+
+            builder.OpenComponent(0, gridComponentType);
+            builder.AddAttribute(1, "name", column.FieldName + "-file");
+            builder.AddAttribute(2, "style", "display:none;");
+            if (column.MultipleInput)
+                builder.AddAttribute(3, "multiple", "");
+#if NETSTANDARD2_1 || NET5_0
+            builder.AddAttribute(4, "OnFileChange", RuntimeHelpers.TypeCheck(EventCallback.Factory.Create<IFileListEntry[]>(this, (files) => OnFileChange(column, files))));
+#else
+            builder.AddAttribute(4, "OnChange", RuntimeHelpers.TypeCheck(EventCallback.Factory.Create<InputFileChangeEventArgs>(this, (e) => OnChange(column, e))));
+#endif
+            builder.AddComponentReferenceCapture(5, r => reference.Variable = r);
             builder.CloseComponent();
         };
 
@@ -156,7 +191,7 @@ namespace GridBlazor.Pages
             pi.SetValue(obj, value, null);
         }
 
-        private void ChangeValue(ChangeEventArgs e, IGridColumn column, string typeAttr = null)
+        private async Task ChangeValue(ChangeEventArgs e, IGridColumn column, string typeAttr = null)
         {
             if (string.IsNullOrWhiteSpace(e.Value.ToString()))
             {
@@ -212,22 +247,43 @@ namespace GridBlazor.Pages
                     }
                 }
             }
+
+            if (((IGridColumn<T>)column).AfterChangeValue != null)
+                await((IGridColumn<T>)column).AfterChangeValue(Item, GridMode.Update);
         }
 
-        private void OnFileChange(IGridColumn column, IFileListEntry[] files)
+#if NETSTANDARD2_1 || NET5_0
+        private async Task OnFileChange(IGridColumn column, IFileListEntry[] files)
         {
             if (!column.MultipleInput && files.Length > 1)
                 files = new IFileListEntry[] { files[0] };
+            
+            Files.AddParameter(column.FieldName, files);
 
-            if (Files.ContainsKey(column.FieldName))
-                Files[column.FieldName] = files;
-            else
-                Files.Add(column.FieldName, files);
+            if (((IGridColumn<T>)column).AfterChangeValue != null)
+                await((IGridColumn<T>)column).AfterChangeValue(Item, GridMode.Update);
 
             _shouldRender = true;
             StateHasChanged();
         }
+#else
+        private async Task OnChange(IGridColumn column, InputFileChangeEventArgs e)
+        {
+            IBrowserFile[] files;
+            if (!column.MultipleInput && e.FileCount >= 1)
+                files = new IBrowserFile[] { e.File };
+            else
+                files = e.GetMultipleFiles(e.FileCount).ToArray();
 
+            Files.AddParameter(column.FieldName, files);
+
+            if (((IGridColumn<T>)column).AfterChangeValue != null)
+                await ((IGridColumn<T>)column).AfterChangeValue(Item, GridMode.Create);
+
+            _shouldRender = true;
+            StateHasChanged();
+        }
+#endif
         protected async Task UpdateItem()
         {
             if (GridComponent.Grid.UpdateConfirmation && _code != _confirmationCode)
@@ -239,10 +295,13 @@ namespace GridBlazor.Pages
 
             try
             {
-                Error = "";
-                ColumnErrors = new QueryDictionary<string>();
-                _tabGroups = null;
-                await GridComponent.UpdateItem(this);
+                bool isValid = await GridComponent.UpdateItem(this);
+                if (isValid)
+                {
+                    Error = "";
+                    ColumnErrors = new QueryDictionary<string>();
+                    _tabGroups = null;
+                }
             }
             catch (GridException e)
             {
@@ -263,11 +322,19 @@ namespace GridBlazor.Pages
         {
             var inputFile = InputFiles.Get(fieldName);
             var type = inputFile.Variable.GetType();
+#if NETSTANDARD2_1 || NET5_0
             if (type == typeof(AgnoInputFile) 
                 && ((AgnoInputFile)inputFile.Variable).InputFileElement.Id != null)
             {
                 await jSRuntime.InvokeVoidAsync("gridJsFunctions.click", (ElementReference)((AgnoInputFile)inputFile.Variable).InputFileElement);
             }
+#else
+            if (type == typeof(InputFile)
+                && ((InputFile)inputFile.Variable).Element.HasValue)
+            {
+                await jSRuntime.InvokeVoidAsync("gridJsFunctions.click", ((InputFile)inputFile.Variable).Element.Value);
+            }
+#endif
         }
 
         public void ShowCrudButtons()

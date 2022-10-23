@@ -20,22 +20,24 @@ namespace GridBlazorServerSide.Services
             _options = options;
         }
 
-        public ItemsDTO<Order> GetOrdersGridRows(Action<IGridColumnCollection<Order>> columns,
+        public async Task<ItemsDTO<Order>> GetOrdersGridRowsAsync(Action<IGridColumnCollection<Order>> columns,
             QueryDictionary<StringValues> query)
         {
             using (var context = new NorthwindDbContext(_options))
             {
                 var repository = new OrdersRepository(context);
+
                 var server = new GridCoreServer<Order>(repository.GetAll(), query, true, "ordersGrid", columns)
                         .Sortable()
                         .WithPaging(10)
                         .Filterable()
                         .WithMultipleFilters()
                         .Groupable(true)                        
-                        .Searchable(true, false, false);
+                        .Searchable(true, false, false)
+                        .SetRemoveDiacritics<NorthwindDbContext>("RemoveDiacritics");
 
                 // return items to displays
-                var items = server.ItemsToDisplay;
+                var items = await server.GetItemsToDisplayAsync(async x => await x.ToListAsync());
 
                 // uncomment the following lines are to test null responses
                 //items = null;
@@ -250,11 +252,55 @@ namespace GridBlazorServerSide.Services
                 }
             }
         }
+
+        public async Task<decimal?> GetMaxFreight(string clientName, QueryDictionary<StringValues> query)
+        {
+            using (var context = new NorthwindDbContext(_options))
+            {
+                try
+                {
+                    var repository = new OrdersRepository(context);
+                    var server = new GridCoreServer<Order>(repository.GetForClient(clientName), query, true, "ordersGrid", null)
+                        .AutoGenerateColumns()
+                        .Sortable()
+                        .Filterable()
+                        .WithMultipleFilters()
+                        .SetRemoveDiacritics<NorthwindDbContext>("RemoveDiacritics");
+                    return await Task.FromResult(server.ItemsToDisplay.Items.Max(r => r.Freight));
+                }
+                catch (Exception)
+                {
+                    throw new GridException("Error getting max freight");
+                }
+            }
+        }
+
+        public async Task<decimal?> GetMinFreight(string clientName, QueryDictionary<StringValues> query)
+        {
+            using (var context = new NorthwindDbContext(_options))
+            {
+                try
+                {
+                    var repository = new OrdersRepository(context);
+                    var server = new GridCoreServer<Order>(repository.GetForClient(clientName), query, true, "ordersGrid", null)
+                        .AutoGenerateColumns()
+                        .Sortable()
+                        .Filterable()
+                        .WithMultipleFilters()
+                        .SetRemoveDiacritics<NorthwindDbContext>("RemoveDiacritics");
+                    return await Task.FromResult(server.ItemsToDisplay.Items.Min(r => r.Freight));
+                }
+                catch (Exception)
+                {
+                    throw new GridException("Error etting min freight");
+                }
+            }
+        }
     }
 
     public interface IOrderService : ICrudDataService<Order>
     {
-        ItemsDTO<Order> GetOrdersGridRows(Action<IGridColumnCollection<Order>> columns, QueryDictionary<StringValues> query);
+        Task<ItemsDTO<Order>> GetOrdersGridRowsAsync(Action<IGridColumnCollection<Order>> columns, QueryDictionary<StringValues> query);
         ItemsDTO<Order> GetOrdersGridRowsWithCount(Action<IGridColumnCollection<Order>> columns, QueryDictionary<StringValues> query);
         ItemsDTO<Order> GetOrdersGridRows(QueryDictionary<StringValues> query);
         ItemsDTO<Order> GetOrdersGridRowsInMemory(Action<IGridColumnCollection<Order>> columns, QueryDictionary<StringValues> query);
@@ -263,5 +309,7 @@ namespace GridBlazorServerSide.Services
         Task UpdateAndSave(Order order);
         Task Add1ToFreight(int OrderId);
         Task Subtract1ToFreight(int OrderId);
+        Task<decimal?> GetMaxFreight(string clientName, QueryDictionary<StringValues> query);
+        Task<decimal?> GetMinFreight(string clientName, QueryDictionary<StringValues> query);
     }
 }
